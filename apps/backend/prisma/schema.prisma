@@ -31,19 +31,21 @@ model UserPreference {
 }
 
 model Article {
-  id          String    @id @default(cuid())
-  title       String
-  summary     String
-  imageUrl    String?
-  sourceUrl   String    @unique
-  sourceName  String
-  category    Category
-  publishedAt DateTime
-  createdAt   DateTime  @default(now())
-  isAd        Boolean   @default(false)
-  votes       Vote[]
-  comments    Comment[]
-  bookmarks   Bookmark[]
+  id              String    @id @default(cuid())
+  title           String
+  summary         String
+  imageUrl        String?
+  sourceUrl       String    @unique
+  sourceName      String
+  category        Category
+  publishedAt     DateTime
+  createdAt       DateTime  @default(now())
+  isAd            Boolean   @default(false)
+  sourceCount     Int       @default(1)
+  importanceScore Int       @default(5)
+  votes           Vote[]
+  comments        Comment[]
+  bookmarks       Bookmark[]
 }
 
 model Vote {

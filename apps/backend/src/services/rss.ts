@@ -31,23 +31,11 @@ export interface RawArticle {
   content: string;
   publishedAt: Date;
   imageUrl?: string;
+  importanceScore?: number; // 1-10; set by source (Reddit score, etc.)
 }
 
-// Top-stories / breaking-news feed variants where available
+// RSS feeds kept only for Culture — Tech/Finance/Politics come from Reddit
 const RSS_FEEDS: { url: string; sourceName: string; category: Category }[] = [
-  // Tech — already top-story feeds
-  { url: "https://techcrunch.com/feed/", sourceName: "TechCrunch", category: "TECH" },
-  { url: "https://www.theverge.com/rss/index.xml", sourceName: "The Verge", category: "TECH" },
-  { url: "https://feeds.arstechnica.com/arstechnica/index", sourceName: "Ars Technica", category: "TECH" },
-  // Finance
-  { url: "https://feeds.a.dj.com/rss/RSSMarketsMain.xml", sourceName: "WSJ Markets", category: "FINANCE" },
-  { url: "https://www.cnbc.com/id/10000664/device/rss/rss.html", sourceName: "CNBC Finance", category: "FINANCE" },
-  { url: "https://feeds.bbci.co.uk/news/business/rss.xml", sourceName: "BBC Business", category: "FINANCE" },
-  // Politics
-  { url: "https://feeds.npr.org/1014/rss.xml", sourceName: "NPR Politics", category: "POLITICS" },
-  { url: "https://rss.politico.com/politics-news.xml", sourceName: "Politico", category: "POLITICS" },
-  { url: "https://feeds.npr.org/1001/rss.xml", sourceName: "NPR News", category: "POLITICS" },
-  // Culture
   { url: "https://variety.com/feed/", sourceName: "Variety", category: "CULTURE" },
   { url: "https://www.hollywoodreporter.com/feed/", sourceName: "The Hollywood Reporter", category: "CULTURE" },
   { url: "https://pitchfork.com/feed/feed-news/rss", sourceName: "Pitchfork", category: "CULTURE" },

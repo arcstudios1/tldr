@@ -46,7 +46,11 @@ router.get("/", async (req: Request, res: Response) => {
         ? { sourceName: { notIn: excludedSources } }
         : {}),
     },
-    orderBy: { publishedAt: "desc" },
+    orderBy: [
+      { importanceScore: "desc" },
+      { sourceCount: "desc" },
+      { publishedAt: "desc" },
+    ],
     take: limit + 1,
     ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
     select: {

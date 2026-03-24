@@ -1,6 +1,7 @@
 import cron from "node-cron";
 import { prisma } from "../db/client";
 import { fetchAllFeeds, RawArticle } from "./rss";
+import { fetchAllRedditFeeds } from "./reddit";
 import { summarizeArticle } from "./summarizer";
 
 const STOP_WORDS = new Set([
@@ -63,8 +64,15 @@ function groupByTopic(
 
 export async function runPipeline(): Promise<void> {
   console.log("[Pipeline] Starting content pipeline run...");
-  const rawArticles = await fetchAllFeeds();
-  console.log(`[Pipeline] Fetched ${rawArticles.length} raw articles`);
+  const [rssArticles, redditArticles] = await Promise.all([
+    fetchAllFeeds(),
+    fetchAllRedditFeeds(),
+  ]);
+  const rawArticles = [...redditArticles, ...rssArticles];
+  console.log(
+    `[Pipeline] Fetched ${rawArticles.length} raw articles ` +
+    `(${redditArticles.length} Reddit, ${rssArticles.length} RSS)`
+  );
 
   // Group by topic and surface multi-source stories first
   const grouped = groupByTopic(rawArticles);
@@ -107,6 +115,8 @@ export async function runPipeline(): Promise<void> {
           sourceName: article.sourceName,
           category: article.category,
           publishedAt: article.publishedAt,
+          sourceCount,
+          importanceScore: article.importanceScore ?? 5,
         },
       });
 
