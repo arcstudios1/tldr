@@ -46,7 +46,7 @@ const RSS_FEEDS: { url: string; sourceName: string; category: Category }[] = [
   // Politics
   { url: "https://feeds.npr.org/1014/rss.xml", sourceName: "NPR Politics", category: "POLITICS" },
   { url: "https://rss.politico.com/politics-news.xml", sourceName: "Politico", category: "POLITICS" },
-  { url: "https://feeds.abcnews.com/abcnews/politicalnews", sourceName: "ABC News", category: "POLITICS" },
+  { url: "https://feeds.npr.org/1001/rss.xml", sourceName: "NPR News", category: "POLITICS" },
   // Culture
   { url: "https://variety.com/feed/", sourceName: "Variety", category: "CULTURE" },
   { url: "https://www.hollywoodreporter.com/feed/", sourceName: "The Hollywood Reporter", category: "CULTURE" },
@@ -99,7 +99,8 @@ export async function fetchFeed(
 
     return articles;
   } catch (err) {
-    console.error(`[RSS] Failed to fetch ${feedConfig.sourceName}:`, err);
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`[RSS] Failed to fetch ${feedConfig.sourceName} (${feedConfig.url}): ${msg}`);
     return [];
   }
 }
