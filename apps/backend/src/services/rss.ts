@@ -34,11 +34,27 @@ export interface RawArticle {
   importanceScore?: number; // 1-10; set by source (Reddit score, etc.)
 }
 
-// RSS feeds kept only for Culture — Tech/Finance/Politics come from Reddit
+// Tech comes from Hacker News (hackernews.ts). Culture feeds disabled — already over-represented.
 const RSS_FEEDS: { url: string; sourceName: string; category: Category }[] = [
-  { url: "https://variety.com/feed/", sourceName: "Variety", category: "CULTURE" },
-  { url: "https://www.hollywoodreporter.com/feed/", sourceName: "The Hollywood Reporter", category: "CULTURE" },
-  { url: "https://pitchfork.com/feed/feed-news/rss", sourceName: "Pitchfork", category: "CULTURE" },
+  // Finance
+  { url: "https://feeds.a.dj.com/rss/RSSMarketsMain.xml",              sourceName: "WSJ Markets",        category: "FINANCE"  },
+  { url: "https://www.cnbc.com/id/10000664/device/rss/rss.html",       sourceName: "CNBC Finance",       category: "FINANCE"  },
+  { url: "https://feeds.bbci.co.uk/news/business/rss.xml",             sourceName: "BBC Business",       category: "FINANCE"  },
+  { url: "https://feeds.a.dj.com/rss/RSSWSJD.xml",                     sourceName: "WSJ",                category: "FINANCE"  },
+  // Politics
+  { url: "https://feeds.npr.org/1014/rss.xml",                         sourceName: "NPR Politics",       category: "POLITICS" },
+  { url: "https://rss.politico.com/politics-news.xml",                  sourceName: "Politico",           category: "POLITICS" },
+  { url: "https://thehill.com/rss/syndicator/19109/news.xml",           sourceName: "The Hill",           category: "POLITICS" },
+  { url: "https://feeds.npr.org/1001/rss.xml",                         sourceName: "NPR News",           category: "POLITICS" },
+  // Sports
+  { url: "https://www.espn.com/espn/rss/news",                         sourceName: "ESPN",               category: "SPORTS"   },
+  { url: "https://sports.yahoo.com/rss/",                              sourceName: "Yahoo Sports",       category: "SPORTS"   },
+  { url: "https://feeds.bbci.co.uk/sport/rss.xml",                     sourceName: "BBC Sport",          category: "SPORTS"   },
+  { url: "https://www.cbssports.com/rss/headlines/",                   sourceName: "CBS Sports",         category: "SPORTS"   },
+  // Culture — re-enable once feed balance is better
+  // { url: "https://variety.com/feed/",                               sourceName: "Variety",            category: "CULTURE"  },
+  // { url: "https://www.hollywoodreporter.com/feed/",                 sourceName: "The Hollywood Reporter", category: "CULTURE" },
+  // { url: "https://pitchfork.com/feed/feed-news/rss",               sourceName: "Pitchfork",          category: "CULTURE"  },
 ];
 
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;

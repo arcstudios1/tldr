@@ -86,4 +86,5 @@ enum Category {
   FINANCE
   POLITICS
   CULTURE
+  SPORTS
 }

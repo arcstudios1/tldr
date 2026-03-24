@@ -1,7 +1,7 @@
 import cron from "node-cron";
 import { prisma } from "../db/client";
 import { fetchAllFeeds, RawArticle } from "./rss";
-import { fetchAllRedditFeeds } from "./reddit";
+import { fetchHackerNews } from "./hackernews";
 import { summarizeArticle } from "./summarizer";
 
 const STOP_WORDS = new Set([
@@ -64,14 +64,14 @@ function groupByTopic(
 
 export async function runPipeline(): Promise<void> {
   console.log("[Pipeline] Starting content pipeline run...");
-  const [rssArticles, redditArticles] = await Promise.all([
+  const [rssArticles, hnArticles] = await Promise.all([
     fetchAllFeeds(),
-    fetchAllRedditFeeds(),
+    fetchHackerNews(),
   ]);
-  const rawArticles = [...redditArticles, ...rssArticles];
+  const rawArticles = [...hnArticles, ...rssArticles];
   console.log(
     `[Pipeline] Fetched ${rawArticles.length} raw articles ` +
-    `(${redditArticles.length} Reddit, ${rssArticles.length} RSS)`
+    `(${hnArticles.length} HackerNews, ${rssArticles.length} RSS)`
   );
 
   // Group by topic and surface multi-source stories first

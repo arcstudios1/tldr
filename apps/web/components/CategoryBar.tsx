@@ -11,6 +11,7 @@ const TABS: { label: string; value: TabValue }[] = [
   { label: "Finance", value: "FINANCE" },
   { label: "Politics", value: "POLITICS" },
   { label: "Culture", value: "CULTURE" },
+  { label: "Sports", value: "SPORTS" },
 ];
 
 interface Props {

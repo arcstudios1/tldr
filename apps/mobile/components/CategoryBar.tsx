@@ -13,6 +13,7 @@ const TABS: { label: string; value: TabValue; icon?: string }[] = [
   { label: "Finance", value: "FINANCE" },
   { label: "Politics", value: "POLITICS" },
   { label: "Culture", value: "CULTURE" },
+  { label: "Sports", value: "SPORTS" },
 ];
 
 interface Props {

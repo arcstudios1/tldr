@@ -1,6 +1,6 @@
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3001";
 
-export type Category = "TECH" | "FINANCE" | "POLITICS" | "CULTURE";
+export type Category = "TECH" | "FINANCE" | "POLITICS" | "CULTURE" | "SPORTS";
 
 export interface Article {
   id: string;

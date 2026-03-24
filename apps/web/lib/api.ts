@@ -1,6 +1,6 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://tldr.up.railway.app";
 
-export type Category = "TECH" | "FINANCE" | "POLITICS" | "CULTURE";
+export type Category = "TECH" | "FINANCE" | "POLITICS" | "CULTURE" | "SPORTS";
 
 export interface Article {
   id: string;
