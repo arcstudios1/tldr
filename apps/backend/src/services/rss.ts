@@ -39,14 +39,14 @@ const RSS_FEEDS: { url: string; sourceName: string; category: Category }[] = [
   { url: "https://techcrunch.com/feed/", sourceName: "TechCrunch", category: "TECH" },
   { url: "https://www.theverge.com/rss/index.xml", sourceName: "The Verge", category: "TECH" },
   { url: "https://feeds.arstechnica.com/arstechnica/index", sourceName: "Ars Technica", category: "TECH" },
-  // Finance — top-news variants
+  // Finance
   { url: "https://feeds.a.dj.com/rss/RSSMarketsMain.xml", sourceName: "WSJ Markets", category: "FINANCE" },
   { url: "https://www.cnbc.com/id/10000664/device/rss/rss.html", sourceName: "CNBC Finance", category: "FINANCE" },
-  { url: "https://feeds.reuters.com/reuters/businessNews", sourceName: "Reuters Business", category: "FINANCE" },
-  // Politics — AP top news covers the most important politics stories
-  { url: "https://feeds.reuters.com/Reuters/PoliticsNews", sourceName: "Reuters Politics", category: "POLITICS" },
+  { url: "https://feeds.bbci.co.uk/news/business/rss.xml", sourceName: "BBC Business", category: "FINANCE" },
+  // Politics
+  { url: "https://feeds.npr.org/1014/rss.xml", sourceName: "NPR Politics", category: "POLITICS" },
   { url: "https://rss.politico.com/politics-news.xml", sourceName: "Politico", category: "POLITICS" },
-  { url: "https://apnews.com/rss/apf-topnews", sourceName: "AP Top News", category: "POLITICS" },
+  { url: "https://feeds.abcnews.com/abcnews/politicalnews", sourceName: "ABC News", category: "POLITICS" },
   // Culture
   { url: "https://variety.com/feed/", sourceName: "Variety", category: "CULTURE" },
   { url: "https://www.hollywoodreporter.com/feed/", sourceName: "The Hollywood Reporter", category: "CULTURE" },
