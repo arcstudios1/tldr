@@ -1,3 +1,4 @@
+import Parser from "rss-parser";
 import { Category } from "@prisma/client";
 import { RawArticle } from "./rss";
 
@@ -10,33 +11,20 @@ const SUBREDDITS: { subreddit: string; category: Category }[] = [
   { subreddit: "worldnews", category: "POLITICS" },
 ];
 
-// Domains we skip — Reddit meta, image hosts, video hosts
 const SKIP_DOMAINS = new Set([
   "reddit.com", "redd.it", "i.redd.it", "v.redd.it",
   "i.imgur.com", "imgur.com", "gfycat.com", "streamable.com",
   "youtube.com", "youtu.be", "twitter.com", "x.com",
 ]);
 
-const HEADERS = {
-  "User-Agent": "tldr-news-bot/1.0",
-  "Accept": "application/json",
-};
-
 const MAX_POSTS = 10;
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
 
-// Map Reddit upvote score → 1-10 importance
-function scoreToImportance(score: number): number {
-  if (score >= 20000) return 10;
-  if (score >= 10000) return 9;
-  if (score >= 5000) return 8;
-  if (score >= 2000) return 7;
-  if (score >= 1000) return 6;
-  if (score >= 300) return 5;
-  return 4;
-}
+const parser = new Parser({
+  headers: { "User-Agent": "tldr-news-bot/1.0" },
+  customFields: { item: ["media:thumbnail"] },
+});
 
-// Format domain as readable source name: "apnews.com" → "AP News"
 function domainToSourceName(domain: string): string {
   const MAP: Record<string, string> = {
     "apnews.com": "AP News",
@@ -70,77 +58,77 @@ function domainToSourceName(domain: string): string {
   return MAP[clean] ?? clean.replace(/\.(com|org|net|co\.uk)$/, "").replace(/-/g, " ");
 }
 
-interface RedditChild {
-  data: {
-    title: string;
-    url: string;
-    thumbnail: string;
-    score: number;
-    domain: string;
-    is_self: boolean;
-    created_utc: number;
-    preview?: {
-      images: Array<{ source: { url: string } }>;
-    };
-  };
+// Extract the external article URL from Reddit RSS item content
+// Reddit RSS wraps the link in the description HTML: <a href="URL">[link]</a>
+function extractArticleUrl(item: Parser.Item): string | undefined {
+  // Reddit RSS puts the external URL directly as the item link for link posts
+  const link = item.link ?? "";
+  // If the link is a Reddit URL, try to extract from content
+  if (link.includes("reddit.com")) {
+    const match = item.content?.match(/href="(https?:\/\/(?!www\.reddit\.com)[^"]+)"\s*>\[link\]/);
+    return match?.[1];
+  }
+  return link || undefined;
 }
 
-function extractImage(post: RedditChild["data"]): string | undefined {
-  // Reddit caches the article's OG image — best quality
-  const preview = post.preview?.images?.[0]?.source?.url;
-  if (preview) return preview.replace(/&amp;/g, "&");
-  // Fall back to Reddit's thumbnail if it's an actual image URL
-  if (post.thumbnail?.startsWith("http")) return post.thumbnail;
+// Extract image URL from Reddit RSS item (thumbnail in enclosure or media)
+function extractImageUrl(item: Parser.Item & { "media:thumbnail"?: { $?: { url?: string } } }): string | undefined {
+  if (item.enclosure?.url?.startsWith("http")) return item.enclosure.url;
+  const mt = item["media:thumbnail"];
+  if (mt?.$?.url?.startsWith("http")) return mt.$.url;
+  // Try to find an image in the content HTML
+  const match = item.content?.match(/<img[^>]+src="(https?:\/\/[^"]+)"/);
+  if (match) return match[1];
   return undefined;
+}
+
+function getDomain(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return "";
+  }
 }
 
 export async function fetchSubreddit(
   config: (typeof SUBREDDITS)[number]
 ): Promise<RawArticle[]> {
   try {
-    const res = await fetch(
-      `https://www.reddit.com/r/${config.subreddit}/top.json?t=day&limit=25`,
-      { headers: HEADERS }
+    const feed = await parser.parseURL(
+      `https://www.reddit.com/r/${config.subreddit}/top.rss?t=day&limit=25`
     );
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-    const json = (await res.json()) as { data: { children: RedditChild[] } };
     const articles: RawArticle[] = [];
     const now = Date.now();
 
-    for (const child of json.data.children) {
-      const post = child.data;
+    for (const item of feed.items) {
       if (articles.length >= MAX_POSTS) break;
 
-      // Skip text posts and Reddit-hosted content
-      if (post.is_self) continue;
-      const cleanDomain = post.domain.replace(/^www\./, "");
-      if (SKIP_DOMAINS.has(cleanDomain)) continue;
+      const articleUrl = extractArticleUrl(item);
+      if (!articleUrl) continue;
 
-      // Skip posts older than 24 hours
-      const pubDate = new Date(post.created_utc * 1000);
+      const domain = getDomain(articleUrl);
+      if (!domain || SKIP_DOMAINS.has(domain)) continue;
+
+      const pubDate = item.pubDate ? new Date(item.pubDate) : new Date();
       if (now - pubDate.getTime() > TWENTY_FOUR_HOURS_MS) continue;
 
-      const imageUrl = extractImage(post);
+      const imageUrl = extractImageUrl(item as Parameters<typeof extractImageUrl>[0]);
       if (!imageUrl) continue;
 
       articles.push({
-        title: post.title,
-        sourceUrl: post.url,
-        sourceName: domainToSourceName(post.domain),
+        title: item.title ?? "Untitled",
+        sourceUrl: articleUrl,
+        sourceName: domainToSourceName(domain),
         category: config.category,
-        content: post.title, // title is enough context for GPT to summarize
+        content: item.title ?? "",
         publishedAt: pubDate,
         imageUrl,
-        importanceScore: scoreToImportance(post.score),
+        importanceScore: 6, // Reddit top-of-day posts default to above-average importance
       });
     }
 
-    console.log(
-      `[Reddit] r/${config.subreddit}: ${articles.length} articles (top score: ${
-        json.data.children[0]?.data.score ?? 0
-      })`
-    );
+    console.log(`[Reddit] r/${config.subreddit}: ${articles.length} articles`);
     return articles;
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -151,11 +139,10 @@ export async function fetchSubreddit(
 
 export async function fetchAllRedditFeeds(): Promise<RawArticle[]> {
   const articles: RawArticle[] = [];
-  // Sequential to respect Reddit's rate limit (1 req/sec)
   for (const config of SUBREDDITS) {
     const results = await fetchSubreddit(config);
     articles.push(...results);
-    await new Promise((r) => setTimeout(r, 1100)); // 1.1s between requests
+    await new Promise((r) => setTimeout(r, 1500));
   }
   return articles;
 }
