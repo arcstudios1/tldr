@@ -50,34 +50,39 @@ router.get("/:id/comments", async (req: Request, res: Response) => {
 
 // POST /articles/:id/comments
 router.post("/:id/comments", async (req: Request, res: Response) => {
-  const parsed = CommentBodySchema.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.flatten() });
-    return;
+  try {
+    const parsed = CommentBodySchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.flatten() });
+      return;
+    }
+
+    const { userId, email, username, body } = parsed.data;
+    const articleId = req.params.id as string;
+
+    const article = await prisma.article.findUnique({ where: { id: articleId } });
+    if (!article) {
+      res.status(404).json({ error: "Article not found" });
+      return;
+    }
+
+    await upsertUser(userId, email, username);
+
+    const comment = await prisma.comment.create({
+      data: { userId, articleId: articleId as string, body },
+      select: {
+        id: true,
+        body: true,
+        createdAt: true,
+        user: { select: { id: true, username: true } },
+      },
+    });
+
+    res.status(201).json(comment);
+  } catch (err) {
+    console.error("[Comments] error:", err);
+    res.status(500).json({ error: "Internal server error" });
   }
-
-  const { userId, email, username, body } = parsed.data;
-  const articleId = req.params.id as string;
-
-  const article = await prisma.article.findUnique({ where: { id: articleId } });
-  if (!article) {
-    res.status(404).json({ error: "Article not found" });
-    return;
-  }
-
-  await upsertUser(userId, email, username);
-
-  const comment = await prisma.comment.create({
-    data: { userId, articleId: articleId as string, body },
-    select: {
-      id: true,
-      body: true,
-      createdAt: true,
-      user: { select: { id: true, username: true } },
-    },
-  });
-
-  res.status(201).json(comment);
 });
 
 export default router;

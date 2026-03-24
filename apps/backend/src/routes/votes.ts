@@ -15,41 +15,44 @@ const VoteBodySchema = z.object({
 // POST /articles/:id/vote
 // value: 1 = upvote, -1 = downvote, 0 = remove vote
 router.post("/:id/vote", async (req: Request, res: Response) => {
-  const parsed = VoteBodySchema.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.flatten() });
-    return;
-  }
+  try {
+    const parsed = VoteBodySchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.flatten() });
+      return;
+    }
 
-  const { userId, email, username, value } = parsed.data;
-  const articleId = req.params.id as string;
+    const { userId, email, username, value } = parsed.data;
+    const articleId = req.params.id as string;
 
-  await upsertUser(userId, email, username);
+    await upsertUser(userId, email, username);
 
-  const article = await prisma.article.findUnique({ where: { id: articleId } });
-  if (!article) {
-    res.status(404).json({ error: "Article not found" });
-    return;
-  }
+    const article = await prisma.article.findUnique({ where: { id: articleId } });
+    if (!article) {
+      res.status(404).json({ error: "Article not found" });
+      return;
+    }
 
-  if (value === 0) {
-    await prisma.vote.deleteMany({ where: { userId, articleId } });
-  } else {
-    await prisma.vote.upsert({
-      where: { userId_articleId: { userId, articleId } },
-      create: { userId, articleId, value },
-      update: { value },
+    if (value === 0) {
+      await prisma.vote.deleteMany({ where: { userId, articleId } });
+    } else {
+      await prisma.vote.upsert({
+        where: { userId_articleId: { userId, articleId } },
+        create: { userId, articleId, value },
+        update: { value },
+      });
+    }
+
+    const votes = await prisma.vote.findMany({ where: { articleId } });
+    res.json({
+      upvotes: votes.filter((v) => v.value === 1).length,
+      downvotes: votes.filter((v) => v.value === -1).length,
+      userVote: value,
     });
+  } catch (err) {
+    console.error("[Vote] error:", err);
+    res.status(500).json({ error: "Internal server error" });
   }
-
-  const votes = await prisma.vote.findMany({ where: { articleId } });
-
-
-  res.json({
-    upvotes: votes.filter((v) => v.value === 1).length,
-    downvotes: votes.filter((v) => v.value === -1).length,
-    userVote: value,
-  });
 });
 
 export default router;
