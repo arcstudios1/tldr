@@ -143,11 +143,19 @@ export default function FeedPage() {
   const feedItems: FeedItem[] = isSavedView ? bookmarks : injectAds(articles);
 
   return (
-    <div style={{ height: "100vh", backgroundColor: "var(--bg)", display: "flex", justifyContent: "center" }}>
-      {/* Centered column — phone-width on desktop, full-width on mobile */}
-      <div style={{ width: "100%", maxWidth: 480, display: "flex", flexDirection: "column", height: "100vh" }}>
+    <div style={{ position: "fixed", inset: 0, backgroundColor: "var(--bg)", display: "flex", justifyContent: "center" }}>
+      {/* Centered phone-width column — bordered on desktop so it looks intentional */}
+      <div style={{
+        width: "100%",
+        maxWidth: 480,
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        borderLeft: "1px solid var(--border)",
+        borderRight: "1px solid var(--border)",
+      }}>
       {/* Header */}
-      <div ref={headerRef}>
+      <div ref={headerRef} style={{ flexShrink: 0 }}>
         <div
           className="flex items-center justify-between px-5 py-3"
           style={{ borderBottom: "1px solid var(--border)" }}
@@ -176,8 +184,8 @@ export default function FeedPage() {
         <CategoryBar selected={selectedTab} onSelect={setSelectedTab} />
       </div>
 
-      {/* Feed */}
-      <div ref={feedRef} className="feed-container flex-1">
+      {/* Feed — flex-1 fills remaining height, feed-container adds snap/scroll */}
+      <div ref={feedRef} className="feed-container" style={{ flex: 1, minHeight: 0 }}>
         {loading ? (
           <div className="h-full flex items-center justify-center">
             <div className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: "var(--accent)", borderTopColor: "transparent" }} />

@@ -48,9 +48,8 @@ body {
   color: var(--text-primary);
 }
 
-/* Feed scroll-snap container */
+/* Feed scroll-snap container — height is controlled by flex-1 in the layout */
 .feed-container {
-  height: calc(100vh - 113px); /* header + category bar */
   overflow-y: scroll;
   scroll-snap-type: y mandatory;
   scroll-behavior: smooth;
