@@ -1,4 +1,9 @@
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { supabase } from "@/lib/supabase";
 
 const FEATURES = [
   {
@@ -26,6 +31,13 @@ const CATEGORY_PILLS = [
 ];
 
 export default function LandingPage() {
+  const router = useRouter();
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) router.replace("/feed");
+    });
+  }, [router]);
+
   return (
     <main style={{ backgroundColor: "var(--bg)", minHeight: "100vh" }}>
 

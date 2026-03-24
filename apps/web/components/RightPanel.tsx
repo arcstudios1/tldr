@@ -43,7 +43,9 @@ export function RightPanel({
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [body, setBody] = useState("");
   const [posting, setPosting] = useState(false);
+  const [postError, setPostError] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
   // Fetch comments when active article changes while panel is open
   useEffect(() => {
@@ -60,6 +62,7 @@ export function RightPanel({
   async function handlePost() {
     if (!body.trim() || !userId || !activeArticle) return;
     setPosting(true);
+    setPostError(false);
     try {
       const comment = await api.postComment(
         activeArticle.id,
@@ -70,8 +73,10 @@ export function RightPanel({
       );
       setComments((prev) => [comment, ...prev]);
       setBody("");
+      // Scroll comment list to top so user sees their new comment
+      setTimeout(() => listRef.current?.scrollTo({ top: 0, behavior: "smooth" }), 50);
     } catch {
-      // silent fail
+      setPostError(true);
     } finally {
       setPosting(false);
     }
@@ -118,7 +123,7 @@ export function RightPanel({
           </div>
 
           {/* Comment list */}
-          <div className="flex-1 overflow-y-auto flex flex-col gap-3 min-h-0 pr-1">
+          <div ref={listRef} className="flex-1 overflow-y-auto flex flex-col gap-3 min-h-0 pr-1">
             {commentsLoading ? (
               <div className="flex justify-center pt-6">
                 <div
@@ -175,6 +180,11 @@ export function RightPanel({
                     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handlePost();
                   }}
                 />
+                {postError && (
+                  <p className="text-xs" style={{ color: "#f87171" }}>
+                    Failed to post. Try again.
+                  </p>
+                )}
                 <button
                   onClick={handlePost}
                   disabled={!body.trim() || posting}

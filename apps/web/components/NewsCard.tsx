@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Article, api } from "@/lib/api";
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -31,10 +31,15 @@ interface Props {
 }
 
 export function NewsCard({ article, userId, email, username, isBookmarked = false, cardHeight, onCommentPress }: Props) {
-  const [localVote, setLocalVote] = useState<1 | -1 | 0>(0);
+  const [localVote, setLocalVote] = useState<1 | -1 | 0>((article.userVote as 1 | -1 | 0) ?? 0);
   const [upvotes, setUpvotes] = useState(article.upvotes);
   const [downvotes, setDownvotes] = useState(article.downvotes);
   const [localBookmark, setLocalBookmark] = useState(isBookmarked);
+
+  // Sync bookmark with parent when bookmarks finish loading
+  useEffect(() => {
+    setLocalBookmark(isBookmarked);
+  }, [isBookmarked]);
 
   const categoryColor = CATEGORY_COLORS[article.category] ?? "#60a5fa";
   const timeAgo = formatTimeAgo(new Date(article.publishedAt));
@@ -189,7 +194,7 @@ export function NewsCard({ article, userId, email, username, isBookmarked = fals
           </button>
           <button
             onClick={handleBookmark}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-sm transition-colors"
+            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
             style={{
               backgroundColor: localBookmark ? "var(--accent-dim)" : "var(--surface)",
               border: `1px solid ${localBookmark ? "var(--accent)" : "var(--border)"}`,
@@ -197,14 +202,19 @@ export function NewsCard({ article, userId, email, username, isBookmarked = fals
             }}
             title={localBookmark ? "Remove bookmark" : "Bookmark"}
           >
-            {localBookmark ? "🔖" : "🏷"}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill={localBookmark ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+            </svg>
           </button>
           <button
             onClick={onCommentPress}
-            className="flex items-center gap-1 px-3 h-8 rounded-full text-xs transition-colors"
+            className="flex items-center gap-1.5 px-3 h-8 rounded-full text-xs transition-colors"
             style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)", color: "var(--text-secondary)" }}
           >
-            💬 {article.commentCount}
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+              <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" />
+            </svg>
+            {article.commentCount}
           </button>
         </div>
       </div>

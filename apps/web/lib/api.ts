@@ -14,6 +14,12 @@ export interface Article {
   upvotes: number;
   downvotes: number;
   commentCount: number;
+  userVote?: number;
+}
+
+export interface Preferences {
+  categories: Category[];
+  excludedSources: string[];
 }
 
 export interface FeedResponse {
@@ -43,6 +49,9 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  getPreferences: (userId: string): Promise<Preferences> =>
+    request<Preferences>(`/users/${userId}/preferences`),
+
   getFeed: (params: { category?: Category; cursor?: string; userId?: string }): Promise<FeedResponse> => {
     const query = new URLSearchParams();
     if (params.category) query.set("category", params.category);

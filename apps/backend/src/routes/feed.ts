@@ -63,7 +63,7 @@ router.get("/", async (req: Request, res: Response) => {
       category: true,
       publishedAt: true,
       _count: { select: { comments: true } },
-      votes: { select: { value: true } },
+      votes: { select: { value: true, userId: true } },
     },
   });
 
@@ -83,6 +83,7 @@ router.get("/", async (req: Request, res: Response) => {
     commentCount: a._count.comments,
     upvotes: a.votes.filter((v) => v.value === 1).length,
     downvotes: a.votes.filter((v) => v.value === -1).length,
+    userVote: userId ? (a.votes.find((v) => v.userId === userId)?.value ?? 0) : 0,
   }));
 
   res.json({ items: normalized, nextCursor });
