@@ -59,11 +59,11 @@ function extractImageUrl(item: CustomItem): string | undefined {
   }
   // Priority 2: media:content
   const mc = item["media:content"];
-  if (mc?.$.url) return mc.$.url;
+  if (mc?.$?.url) return mc.$.url;
   if (mc?.url) return mc.url;
   // Priority 3: media:thumbnail
   const mt = item["media:thumbnail"];
-  if (mt?.$.url) return mt.$.url;
+  if (mt?.$?.url) return mt.$.url;
   if (mt?.url) return mt.url;
   return undefined;
 }
