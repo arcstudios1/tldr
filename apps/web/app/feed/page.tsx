@@ -90,10 +90,13 @@ export default function FeedPage() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Card height calculation
+  // Card height: leave ~80px peeking so the next card is always visible
   useEffect(() => {
     function measure() {
-      if (feedRef.current) setCardHeight(feedRef.current.clientHeight);
+      if (feedRef.current) {
+        const peek = 80;
+        setCardHeight(feedRef.current.clientHeight - peek);
+      }
     }
     measure();
     window.addEventListener("resize", measure);
@@ -140,7 +143,9 @@ export default function FeedPage() {
   const feedItems: FeedItem[] = isSavedView ? bookmarks : injectAds(articles);
 
   return (
-    <div style={{ height: "100vh", backgroundColor: "var(--bg)", display: "flex", flexDirection: "column" }}>
+    <div style={{ height: "100vh", backgroundColor: "var(--bg)", display: "flex", justifyContent: "center" }}>
+      {/* Centered column — phone-width on desktop, full-width on mobile */}
+      <div style={{ width: "100%", maxWidth: 480, display: "flex", flexDirection: "column", height: "100vh" }}>
       {/* Header */}
       <div ref={headerRef}>
         <div
@@ -223,6 +228,7 @@ export default function FeedPage() {
             )}
           </>
         )}
+      </div>
       </div>
     </div>
   );
