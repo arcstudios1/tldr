@@ -63,12 +63,14 @@ export function RightPanel({
     if (!body.trim() || !userId || !activeArticle) return;
     setPosting(true);
     setPostError(false);
+    // Fall back to email prefix if username isn't set in Supabase metadata
+    const effectiveUsername = username || email?.split("@")[0] || "user";
     try {
       const comment = await api.postComment(
         activeArticle.id,
         userId,
         email!,
-        username!,
+        effectiveUsername,
         body.trim()
       );
       setComments((prev) => [comment, ...prev]);

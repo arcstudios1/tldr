@@ -35,6 +35,14 @@ export function NewsCard({ article, userId, email, username, isBookmarked = fals
   const [upvotes, setUpvotes] = useState(article.upvotes);
   const [downvotes, setDownvotes] = useState(article.downvotes);
   const [localBookmark, setLocalBookmark] = useState(isBookmarked);
+  const [isVoting, setIsVoting] = useState(false);
+
+  // Sync vote + counts when article data refreshes (e.g. after auth loads)
+  useEffect(() => {
+    setLocalVote((article.userVote as 1 | -1 | 0) ?? 0);
+    setUpvotes(article.upvotes);
+    setDownvotes(article.downvotes);
+  }, [article.id, article.userVote]);
 
   // Sync bookmark with parent when bookmarks finish loading
   useEffect(() => {
@@ -46,18 +54,22 @@ export function NewsCard({ article, userId, email, username, isBookmarked = fals
   const imageHeight = Math.round(cardHeight * 0.30);
   const bullets = article.summary.split("\n").filter(Boolean);
 
-  async function handleVote(value: 1 | -1 | 0) {
-    if (!userId) return;
+  async function handleVote(value: 1 | -1) {
+    if (!userId || isVoting) return;
     const prev = localVote;
     const next = prev === value ? 0 : value;
+    setIsVoting(true);
     setLocalVote(next);
-    // Optimistic update
     setUpvotes(u => u + (next === 1 ? 1 : prev === 1 ? -1 : 0));
     setDownvotes(d => d + (next === -1 ? 1 : prev === -1 ? -1 : 0));
     try {
       await api.vote(article.id, userId, email!, username!, next);
     } catch {
       setLocalVote(prev);
+      setUpvotes(article.upvotes);
+      setDownvotes(article.downvotes);
+    } finally {
+      setIsVoting(false);
     }
   }
 
@@ -160,7 +172,8 @@ export function NewsCard({ article, userId, email, username, isBookmarked = fals
         <div className="flex items-center gap-1.5">
           <button
             onClick={() => handleVote(1)}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors"
+            disabled={isVoting}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors disabled:cursor-not-allowed"
             style={{
               backgroundColor: localVote === 1 ? "var(--upvote)" : "var(--surface)",
               color: localVote === 1 ? "#fff" : "var(--text-secondary)",
@@ -171,7 +184,8 @@ export function NewsCard({ article, userId, email, username, isBookmarked = fals
           </button>
           <button
             onClick={() => handleVote(-1)}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors"
+            disabled={isVoting}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors disabled:cursor-not-allowed"
             style={{
               backgroundColor: localVote === -1 ? "var(--downvote)" : "var(--surface)",
               color: localVote === -1 ? "#fff" : "var(--text-secondary)",
