@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #000000;
+  --surface: #111111;
+  --surface-hover: #1a1a1a;
+  --border: #1f2937;
+  --text-primary: #ffffff;
+  --text-secondary: #9ca3af;
+  --text-muted: #4b5563;
+  --accent: #60a5fa;
+  --accent-dim: rgba(96, 165, 250, 0.1);
+  --upvote: #3b82f6;
+  --downvote: #ef4444;
+  --category-tech: #60a5fa;
+  --category-finance: #34d399;
+  --category-politics: #f87171;
+  --category-culture: #c084fc;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-jetbrains-mono);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-inter), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.wordmark {
+  font-family: var(--font-jetbrains-mono), monospace;
+  color: var(--text-primary);
+}
+
+/* Feed scroll-snap container */
+.feed-container {
+  height: calc(100vh - 113px); /* header + category bar */
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.feed-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* Each card snaps into view */
+.feed-card {
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+/* Accent bar in summary block */
+.summary-bar {
+  width: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+  flex-shrink: 0;
+}

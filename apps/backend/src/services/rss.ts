@@ -33,35 +33,36 @@ export interface RawArticle {
   imageUrl?: string;
 }
 
+// Top-stories / breaking-news feed variants where available
 const RSS_FEEDS: { url: string; sourceName: string; category: Category }[] = [
-  // Tech
+  // Tech — already top-story feeds
   { url: "https://techcrunch.com/feed/", sourceName: "TechCrunch", category: "TECH" },
   { url: "https://www.theverge.com/rss/index.xml", sourceName: "The Verge", category: "TECH" },
   { url: "https://feeds.arstechnica.com/arstechnica/index", sourceName: "Ars Technica", category: "TECH" },
-  // Finance
+  // Finance — top-news variants
   { url: "https://feeds.a.dj.com/rss/RSSMarketsMain.xml", sourceName: "WSJ Markets", category: "FINANCE" },
   { url: "https://www.cnbc.com/id/10000664/device/rss/rss.html", sourceName: "CNBC Finance", category: "FINANCE" },
   { url: "https://feeds.reuters.com/reuters/businessNews", sourceName: "Reuters Business", category: "FINANCE" },
-  // Politics
+  // Politics — AP top news covers the most important politics stories
   { url: "https://feeds.reuters.com/Reuters/PoliticsNews", sourceName: "Reuters Politics", category: "POLITICS" },
   { url: "https://rss.politico.com/politics-news.xml", sourceName: "Politico", category: "POLITICS" },
-  { url: "https://apnews.com/rss/apf-politics", sourceName: "AP Politics", category: "POLITICS" },
+  { url: "https://apnews.com/rss/apf-topnews", sourceName: "AP Top News", category: "POLITICS" },
   // Culture
   { url: "https://variety.com/feed/", sourceName: "Variety", category: "CULTURE" },
   { url: "https://www.hollywoodreporter.com/feed/", sourceName: "The Hollywood Reporter", category: "CULTURE" },
   { url: "https://pitchfork.com/feed/feed-news/rss", sourceName: "Pitchfork", category: "CULTURE" },
 ];
 
+const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
+const MAX_ARTICLES_PER_FEED = 5;
+
 function extractImageUrl(item: CustomItem): string | undefined {
-  // Priority 1: standard RSS enclosure
   if (item.enclosure?.url && item.enclosure.type?.startsWith("image/")) {
     return item.enclosure.url;
   }
-  // Priority 2: media:content
   const mc = item["media:content"];
   if (mc?.$?.url) return mc.$?.url;
   if (mc?.url) return mc.url;
-  // Priority 3: media:thumbnail
   const mt = item["media:thumbnail"];
   if (mt?.$?.url) return mt.$?.url;
   if (mt?.url) return mt.url;
@@ -74,9 +75,14 @@ export async function fetchFeed(
   try {
     const feed = await parser.parseURL(feedConfig.url);
     const articles: RawArticle[] = [];
+    const now = Date.now();
 
-    for (const item of feed.items.slice(0, 10)) {
+    for (const item of feed.items.slice(0, MAX_ARTICLES_PER_FEED)) {
       if (!item.link || !item.title) continue;
+
+      // Skip articles older than 24 hours
+      const pubDate = item.pubDate ? new Date(item.pubDate) : new Date();
+      if (now - pubDate.getTime() > TWENTY_FOUR_HOURS_MS) continue;
 
       const content = item.contentSnippet || item.content || item.summary || item.title;
 
@@ -86,7 +92,7 @@ export async function fetchFeed(
         sourceName: feedConfig.sourceName,
         category: feedConfig.category,
         content: content.slice(0, 800),
-        publishedAt: item.pubDate ? new Date(item.pubDate) : new Date(),
+        publishedAt: pubDate,
         imageUrl: extractImageUrl(item),
       });
     }
