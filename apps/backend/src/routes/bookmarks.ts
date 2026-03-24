@@ -7,12 +7,12 @@ const router = Router();
 
 // GET /users/:userId/bookmarks
 router.get("/:userId/bookmarks", async (req: Request, res: Response) => {
-  const { userId } = req.params;
+  const userId = req.params.userId as string;
   try {
     const bookmarks = await prisma.bookmark.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
-      select: {
+      include: {
         article: {
           select: {
             id: true,
@@ -40,8 +40,8 @@ router.get("/:userId/bookmarks", async (req: Request, res: Response) => {
       category: a.category,
       publishedAt: a.publishedAt,
       commentCount: a._count.comments,
-      upvotes: a.votes.filter((v) => v.value === 1).length,
-      downvotes: a.votes.filter((v) => v.value === -1).length,
+      upvotes: a.votes.filter((v: { value: number }) => v.value === 1).length,
+      downvotes: a.votes.filter((v: { value: number }) => v.value === -1).length,
     }));
 
     res.json(articles);
@@ -65,7 +65,7 @@ router.post("/:userId/bookmarks", async (req: Request, res: Response) => {
     return;
   }
 
-  const { userId } = req.params;
+  const userId = req.params.userId as string;
   const { email, username, articleId } = parsed.data;
 
   try {
@@ -84,7 +84,8 @@ router.post("/:userId/bookmarks", async (req: Request, res: Response) => {
 
 // DELETE /users/:userId/bookmarks/:articleId  — remove bookmark
 router.delete("/:userId/bookmarks/:articleId", async (req: Request, res: Response) => {
-  const { userId, articleId } = req.params;
+  const userId = req.params.userId as string;
+  const articleId = req.params.articleId as string;
   try {
     await prisma.bookmark.deleteMany({ where: { userId, articleId } });
     res.json({ bookmarked: false });

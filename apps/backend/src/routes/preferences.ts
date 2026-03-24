@@ -7,7 +7,7 @@ import { upsertUser } from "../db/upsertUser";
 const router = Router();
 
 router.get("/:userId/preferences", async (req: Request, res: Response) => {
-  const { userId } = req.params;
+  const userId = req.params.userId as string;
   try {
     const prefs = await prisma.userPreference.findUnique({ where: { userId } });
     res.json(prefs ?? { categories: [], excludedSources: [] });
@@ -31,7 +31,7 @@ router.put("/:userId/preferences", async (req: Request, res: Response) => {
     return;
   }
 
-  const { userId } = req.params;
+  const userId = req.params.userId as string;
   const { categories, excludedSources, email, username } = parsed.data;
 
   try {

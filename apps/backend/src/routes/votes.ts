@@ -22,7 +22,7 @@ router.post("/:id/vote", async (req: Request, res: Response) => {
   }
 
   const { userId, email, username, value } = parsed.data;
-  const articleId = req.params.id;
+  const articleId = req.params.id as string;
 
   await upsertUser(userId, email, username);
 
@@ -43,6 +43,7 @@ router.post("/:id/vote", async (req: Request, res: Response) => {
   }
 
   const votes = await prisma.vote.findMany({ where: { articleId } });
+
 
   res.json({
     upvotes: votes.filter((v) => v.value === 1).length,

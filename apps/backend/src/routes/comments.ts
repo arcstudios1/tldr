@@ -26,7 +26,7 @@ router.get("/:id/comments", async (req: Request, res: Response) => {
   }
 
   const { cursor, limit } = parsed.data;
-  const articleId = req.params.id;
+  const articleId = req.params.id as string;
 
   const comments = await prisma.comment.findMany({
     where: { articleId },
@@ -57,7 +57,7 @@ router.post("/:id/comments", async (req: Request, res: Response) => {
   }
 
   const { userId, email, username, body } = parsed.data;
-  const articleId = req.params.id;
+  const articleId = req.params.id as string;
 
   const article = await prisma.article.findUnique({ where: { id: articleId } });
   if (!article) {
@@ -68,7 +68,7 @@ router.post("/:id/comments", async (req: Request, res: Response) => {
   await upsertUser(userId, email, username);
 
   const comment = await prisma.comment.create({
-    data: { userId, articleId, body },
+    data: { userId, articleId: articleId as string, body },
     select: {
       id: true,
       body: true,
