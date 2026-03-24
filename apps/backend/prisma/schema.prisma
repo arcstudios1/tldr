@@ -1,0 +1,86 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/@prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String          @id @default(cuid())
+  email       String          @unique
+  username    String          @unique
+  createdAt   DateTime        @default(now())
+  votes       Vote[]
+  comments    Comment[]
+  preferences UserPreference?
+  bookmarks   Bookmark[]
+}
+
+model UserPreference {
+  id              String     @id @default(cuid())
+  userId          String     @unique
+  categories      Category[]
+  excludedSources String[]
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Article {
+  id          String    @id @default(cuid())
+  title       String
+  summary     String
+  imageUrl    String?
+  sourceUrl   String    @unique
+  sourceName  String
+  category    Category
+  publishedAt DateTime
+  createdAt   DateTime  @default(now())
+  isAd        Boolean   @default(false)
+  votes       Vote[]
+  comments    Comment[]
+  bookmarks   Bookmark[]
+}
+
+model Vote {
+  id        String   @id @default(cuid())
+  userId    String
+  articleId String
+  value     Int
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, articleId])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  userId    String
+  articleId String
+  body      String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+}
+
+model Bookmark {
+  id        String   @id @default(cuid())
+  userId    String
+  articleId String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, articleId])
+}
+
+enum Category {
+  TECH
+  FINANCE
+  POLITICS
+  CULTURE
+}
