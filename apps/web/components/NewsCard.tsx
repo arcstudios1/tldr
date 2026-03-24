@@ -37,12 +37,13 @@ export function NewsCard({ article, userId, email, username, isBookmarked = fals
   const [localBookmark, setLocalBookmark] = useState(isBookmarked);
   const [isVoting, setIsVoting] = useState(false);
 
-  // Sync vote + counts when article data refreshes (e.g. after auth loads)
+  // Reset local vote state only when a different article occupies this card slot
   useEffect(() => {
     setLocalVote((article.userVote as 1 | -1 | 0) ?? 0);
     setUpvotes(article.upvotes);
     setDownvotes(article.downvotes);
-  }, [article.id, article.userVote]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [article.id]);
 
   // Sync bookmark with parent when bookmarks finish loading
   useEffect(() => {
@@ -58,13 +59,18 @@ export function NewsCard({ article, userId, email, username, isBookmarked = fals
     if (!userId || isVoting) return;
     const prev = localVote;
     const next = prev === value ? 0 : value;
+    const effectiveUsername = username || email?.split("@")[0] || "user";
     setIsVoting(true);
     setLocalVote(next);
     setUpvotes(u => u + (next === 1 ? 1 : prev === 1 ? -1 : 0));
     setDownvotes(d => d + (next === -1 ? 1 : prev === -1 ? -1 : 0));
     try {
-      await api.vote(article.id, userId, email!, username!, next);
+      const result = await api.vote(article.id, userId, email!, effectiveUsername, next);
+      // Sync counts from server response
+      setUpvotes(result.upvotes);
+      setDownvotes(result.downvotes);
     } catch {
+      // Revert optimistic update on failure
       setLocalVote(prev);
       setUpvotes(article.upvotes);
       setDownvotes(article.downvotes);
