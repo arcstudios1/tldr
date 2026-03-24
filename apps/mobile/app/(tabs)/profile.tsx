@@ -15,6 +15,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   FINANCE: "#34D399",
   POLITICS: "#F87171",
   CULTURE: "#C084FC",
+  SPORTS: "#FB923C",
 };
 
 export default function ProfileScreen() {

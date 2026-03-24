@@ -4,43 +4,88 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import { api } from "@/lib/api";
+import { api, Category } from "@/lib/api";
 import type { User } from "@supabase/supabase-js";
 
-const CATEGORY_COLORS: Record<string, string> = {
-  TECH: "#60a5fa",
-  FINANCE: "#34d399",
-  POLITICS: "#f87171",
-  CULTURE: "#c084fc",
-  SPORTS: "#fb923c",
-};
+const CATEGORY_META: { id: Category; label: string; color: string; icon: string; description: string }[] = [
+  { id: "TECH",     label: "Tech",     color: "#60a5fa", icon: "⚡", description: "Software, startups & science" },
+  { id: "FINANCE",  label: "Finance",  color: "#34d399", icon: "📈", description: "Markets, investing & the economy" },
+  { id: "POLITICS", label: "Politics", color: "#f87171", icon: "🏛️", description: "Policy, elections & world affairs" },
+  { id: "CULTURE",  label: "Culture",  color: "#c084fc", icon: "🎭", description: "Entertainment, arts & trending" },
+  { id: "SPORTS",   label: "Sports",   color: "#fb923c", icon: "🏆", description: "Scores, trades & sports news" },
+];
+
+const ALL_SOURCES: { name: string; category: Category }[] = [
+  { name: "Hacker News",             category: "TECH"     },
+  { name: "WSJ Markets",             category: "FINANCE"  },
+  { name: "CNBC Finance",            category: "FINANCE"  },
+  { name: "BBC Business",            category: "FINANCE"  },
+  { name: "NPR Politics",            category: "POLITICS" },
+  { name: "Politico",                category: "POLITICS" },
+  { name: "The Hill",                category: "POLITICS" },
+  { name: "Variety",                 category: "CULTURE"  },
+  { name: "The Hollywood Reporter",  category: "CULTURE"  },
+  { name: "Pitchfork",               category: "CULTURE"  },
+  { name: "ESPN",                    category: "SPORTS"   },
+  { name: "Yahoo Sports",            category: "SPORTS"   },
+  { name: "BBC Sport",               category: "SPORTS"   },
+  { name: "CBS Sports",              category: "SPORTS"   },
+];
+
+type Section = "topics" | "sources" | null;
 
 export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [bookmarkCount, setBookmarkCount] = useState<number | null>(null);
-  const [categories, setCategories] = useState<string[]>([]);
+
+  // Preferences state
+  const [categories, setCategories] = useState<Set<Category>>(new Set());
+  const [excluded, setExcluded] = useState<Set<string>>(new Set());
+  const [openSection, setOpenSection] = useState<Section>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) {
-        router.replace("/sign-in");
-        return;
-      }
+      if (!data.session) { router.replace("/sign-in"); return; }
       const u = data.session.user;
       setUser(u);
-      // Load bookmarks + prefs in parallel
       Promise.all([
         api.getBookmarks(u.id).catch(() => []),
         api.getPreferences(u.id).catch(() => null),
       ]).then(([bookmarks, prefs]) => {
         setBookmarkCount(bookmarks.length);
-        if (prefs?.categories) setCategories(prefs.categories);
+        if (prefs) {
+          setCategories(new Set(prefs.categories));
+          setExcluded(new Set(prefs.excludedSources));
+        }
       });
       setLoading(false);
     });
   }, [router]);
+
+  async function handleSave() {
+    if (!user) return;
+    setSaving(true);
+    setSaveSuccess(false);
+    try {
+      const effectiveUsername = user.user_metadata?.username || user.email?.split("@")[0] || "user";
+      await api.savePreferences(
+        user.id, user.email!, effectiveUsername,
+        Array.from(categories),
+        Array.from(excluded)
+      );
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2500);
+      setOpenSection(null);
+    } catch (err) {
+      console.error("[Profile] save error:", err);
+    } finally {
+      setSaving(false);
+    }
+  }
 
   async function handleSignOut() {
     await supabase.auth.signOut();
@@ -74,74 +119,189 @@ export default function ProfilePage() {
         <div style={{ width: 48 }} />
       </div>
 
-      <div className="max-w-sm mx-auto px-5 py-8 flex flex-col gap-6">
+      <div className="max-w-sm mx-auto px-5 py-8 flex flex-col gap-5">
         {/* Avatar + name */}
-        <div className="flex flex-col items-center gap-3 py-4">
+        <div className="flex flex-col items-center gap-3 py-2">
           <div
-            className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold"
+            className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold"
             style={{ backgroundColor: "var(--surface)", border: "2px solid var(--accent)", color: "var(--accent)" }}
           >
             {initial}
           </div>
           <div className="text-center">
-            <p className="font-semibold text-lg" style={{ color: "var(--text-primary)" }}>{username}</p>
-            <p className="text-sm" style={{ color: "var(--text-muted)" }}>{user.email}</p>
+            <p className="font-semibold" style={{ color: "var(--text-primary)" }}>{username}</p>
+            <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{user.email}</p>
           </div>
         </div>
 
-        {/* Stats row */}
+        {/* Stats */}
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-xl p-4 text-center" style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}>
-            <p className="text-2xl font-bold" style={{ color: "var(--accent)" }}>
-              {bookmarkCount ?? "—"}
-            </p>
-            <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>Bookmarks</p>
+            <p className="text-2xl font-bold" style={{ color: "var(--accent)" }}>{bookmarkCount ?? "—"}</p>
+            <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>Bookmarks</p>
           </div>
           <div className="rounded-xl p-4 text-center" style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}>
-            <p className="text-2xl font-bold" style={{ color: "var(--accent)" }}>
-              {categories.length || "—"}
-            </p>
-            <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>Topics</p>
+            <p className="text-2xl font-bold" style={{ color: "var(--accent)" }}>{categories.size || "—"}</p>
+            <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>Topics</p>
           </div>
         </div>
 
-        {/* Topics */}
-        {categories.length > 0 && (
-          <div className="rounded-xl p-4" style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}>
-            <p className="text-xs font-semibold tracking-widest mb-3" style={{ color: "var(--text-muted)" }}>YOUR TOPICS</p>
-            <div className="flex flex-wrap gap-2">
-              {categories.map((cat) => (
-                <span
-                  key={cat}
-                  className="text-xs px-2.5 py-1 rounded-full font-medium"
-                  style={{ color: CATEGORY_COLORS[cat] ?? "var(--accent)", border: `1px solid ${CATEGORY_COLORS[cat] ?? "var(--accent)"}`, backgroundColor: `${CATEGORY_COLORS[cat] ?? "var(--accent)"}18` }}
-                >
-                  {cat.charAt(0) + cat.slice(1).toLowerCase()}
-                </span>
-              ))}
-            </div>
+        {/* Save success banner */}
+        {saveSuccess && (
+          <div className="rounded-xl px-4 py-3 text-sm text-center font-medium" style={{ backgroundColor: "#34d39920", border: "1px solid #34d399", color: "#34d399" }}>
+            Preferences saved ✓
           </div>
         )}
 
-        {/* Actions */}
+        {/* Topics accordion */}
+        <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--border)" }}>
+          <button
+            className="w-full flex items-center justify-between px-4 py-3.5 text-sm font-medium"
+            style={{ backgroundColor: "var(--surface)", color: "var(--text-primary)" }}
+            onClick={() => setOpenSection(openSection === "topics" ? null : "topics")}
+          >
+            <span>Your Topics</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: "var(--bg)", color: "var(--accent)", border: "1px solid var(--border)" }}>
+                {categories.size} selected
+              </span>
+              <span style={{ color: "var(--text-muted)" }}>{openSection === "topics" ? "▲" : "▼"}</span>
+            </div>
+          </button>
+
+          {openSection === "topics" && (
+            <div className="p-4 flex flex-col gap-2" style={{ borderTop: "1px solid var(--border)" }}>
+              {CATEGORY_META.map((topic) => {
+                const active = categories.has(topic.id);
+                return (
+                  <button
+                    key={topic.id}
+                    onClick={() => {
+                      setCategories((prev) => {
+                        const next = new Set(prev);
+                        if (next.has(topic.id)) {
+                          if (next.size === 1) return prev;
+                          next.delete(topic.id);
+                        } else {
+                          next.add(topic.id);
+                        }
+                        return next;
+                      });
+                    }}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left"
+                    style={{
+                      backgroundColor: active ? `${topic.color}15` : "transparent",
+                      border: `1px solid ${active ? topic.color : "var(--border)"}`,
+                    }}
+                  >
+                    <span>{topic.icon}</span>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium" style={{ color: active ? topic.color : "var(--text-primary)" }}>{topic.label}</p>
+                      <p className="text-xs" style={{ color: "var(--text-muted)" }}>{topic.description}</p>
+                    </div>
+                    <div
+                      className="w-4 h-4 rounded-full border flex items-center justify-center shrink-0"
+                      style={{ borderColor: active ? topic.color : "var(--border)", backgroundColor: active ? topic.color : "transparent" }}
+                    >
+                      {active && <svg width="8" height="8" viewBox="0 0 8 8"><path d="M1.5 4l2 2L6.5 2" stroke="#000" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Sources accordion */}
+        <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--border)" }}>
+          <button
+            className="w-full flex items-center justify-between px-4 py-3.5 text-sm font-medium"
+            style={{ backgroundColor: "var(--surface)", color: "var(--text-primary)" }}
+            onClick={() => setOpenSection(openSection === "sources" ? null : "sources")}
+          >
+            <span>Excluded Sources</span>
+            <div className="flex items-center gap-2">
+              {excluded.size > 0 && (
+                <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: "var(--bg)", color: "#f87171", border: "1px solid #f87171" }}>
+                  {excluded.size} excluded
+                </span>
+              )}
+              <span style={{ color: "var(--text-muted)" }}>{openSection === "sources" ? "▲" : "▼"}</span>
+            </div>
+          </button>
+
+          {openSection === "sources" && (
+            <div className="flex flex-col" style={{ borderTop: "1px solid var(--border)" }}>
+              <p className="text-xs px-4 pt-3 pb-2" style={{ color: "var(--text-muted)" }}>
+                Tap a source to exclude it from your feed.
+              </p>
+              {CATEGORY_META.map((cat) => {
+                const sources = ALL_SOURCES.filter((s) => s.category === cat.id);
+                if (sources.length === 0) return null;
+                return (
+                  <div key={cat.id} className="px-4 pb-3">
+                    <p className="text-xs font-semibold tracking-wider mb-2" style={{ color: cat.color }}>
+                      {cat.label.toUpperCase()}
+                    </p>
+                    {sources.map((source) => {
+                      const isExcluded = excluded.has(source.name);
+                      return (
+                        <button
+                          key={source.name}
+                          onClick={() => setExcluded((prev) => {
+                            const next = new Set(prev);
+                            isExcluded ? next.delete(source.name) : next.add(source.name);
+                            return next;
+                          })}
+                          className="w-full flex items-center justify-between py-2.5 text-sm"
+                          style={{ borderBottom: "1px solid var(--border)", opacity: isExcluded ? 0.5 : 1 }}
+                        >
+                          <span style={{ color: isExcluded ? "var(--text-muted)" : "var(--text-primary)", textDecoration: isExcluded ? "line-through" : "none" }}>
+                            {source.name}
+                          </span>
+                          <div
+                            className="w-5 h-5 rounded-full border flex items-center justify-center"
+                            style={{ borderColor: isExcluded ? "var(--border)" : cat.color, backgroundColor: isExcluded ? "transparent" : `${cat.color}30` }}
+                          >
+                            {isExcluded
+                              ? <svg width="8" height="8" viewBox="0 0 8 8"><path d="M1.5 1.5l5 5M6.5 1.5l-5 5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" style={{ color: "var(--text-muted)" }} /></svg>
+                              : <svg width="8" height="8" viewBox="0 0 8 8"><path d="M1.5 4l2 2L6.5 2" stroke={cat.color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                            }
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Save button — only shown when a section is open */}
+        {openSection && (
+          <button
+            onClick={handleSave}
+            disabled={saving || categories.size === 0}
+            className="w-full py-3 rounded-xl text-sm font-semibold transition-opacity disabled:opacity-40"
+            style={{ backgroundColor: "var(--accent)", color: "#000" }}
+          >
+            {saving ? "Saving…" : "Save preferences"}
+          </button>
+        )}
+
+        {/* Other actions */}
         <div className="flex flex-col gap-2">
           <Link
             href="/feed"
-            className="w-full py-3 rounded-xl text-sm font-medium text-center transition-colors"
+            className="w-full py-3 rounded-xl text-sm font-medium text-center"
             style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)", color: "var(--text-primary)" }}
           >
             🔖 View Bookmarks
           </Link>
-          <Link
-            href="/feed"
-            className="w-full py-3 rounded-xl text-sm font-medium text-center transition-colors"
-            style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)", color: "var(--text-primary)" }}
-          >
-            ✦ Edit Topics &amp; Sources
-          </Link>
           <button
             onClick={handleSignOut}
-            className="w-full py-3 rounded-xl text-sm font-medium transition-colors"
+            className="w-full py-3 rounded-xl text-sm font-medium"
             style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)", color: "#f87171" }}
           >
             Sign out

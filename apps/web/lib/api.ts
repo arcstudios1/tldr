@@ -52,6 +52,18 @@ export const api = {
   getPreferences: (userId: string): Promise<Preferences> =>
     request<Preferences>(`/users/${userId}/preferences`),
 
+  savePreferences: (
+    userId: string,
+    email: string,
+    username: string,
+    categories: Category[],
+    excludedSources: string[]
+  ): Promise<Preferences> =>
+    request<Preferences>(`/users/${userId}/preferences`, {
+      method: "PUT",
+      body: JSON.stringify({ email, username, categories, excludedSources }),
+    }),
+
   getFeed: (params: { category?: Category; cursor?: string; userId?: string }): Promise<FeedResponse> => {
     const query = new URLSearchParams();
     if (params.category) query.set("category", params.category);

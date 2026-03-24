@@ -30,7 +30,7 @@ export default function SignUpPage() {
       setError(error.message);
       setLoading(false);
     } else {
-      router.push("/feed");
+      router.push("/onboarding/categories");
     }
   }
 

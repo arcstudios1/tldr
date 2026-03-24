@@ -31,9 +31,8 @@ export default function CategoriesScreen() {
   const email = sessionData?.data.session?.user.email ?? "";
   const username = sessionData?.data.session?.user.user_metadata?.username ?? "";
 
-  const [selected, setSelected] = useState<Set<Category>>(
-    new Set(CATEGORIES.map((c) => c.id))
-  );
+  const [selected, setSelected] = useState<Set<Category>>(new Set());
+  const [saving, setSaving] = useState(false);
 
   // Pre-fill with existing preferences when editing
   useEffect(() => {
@@ -89,8 +88,35 @@ export default function CategoriesScreen() {
         Alert.alert("Error", "Failed to save preferences. Please try again.");
       }
     } else {
-      // Onboarding: pass selected categories to sources screen
-      router.push(`/(onboarding)/sources?categories=${Array.from(selected).join(",")}`);
+      // Onboarding: save directly, no sources step
+      setSaving(true);
+      try {
+        let uid = userId;
+        let userEmail = email;
+        let userUsername = username;
+
+        if (!uid || !userEmail) {
+          const { data } = await supabase.auth.getSession();
+          uid = data.session?.user.id ?? null;
+          userEmail = data.session?.user.email ?? "";
+          userUsername = data.session?.user.user_metadata?.username ?? "";
+        }
+
+        if (!uid || !userEmail) {
+          Alert.alert("Session expired", "Please sign in again.");
+          return;
+        }
+
+        const effectiveUsername = userUsername || userEmail.split("@")[0] || "user";
+        await api.savePreferences(uid, userEmail, effectiveUsername, Array.from(selected), []);
+        await supabase.auth.updateUser({ data: { onboardingComplete: true } });
+        router.replace("/(tabs)/");
+      } catch (err) {
+        console.error("[Categories] Save error:", err);
+        Alert.alert("Error", "Failed to save preferences. Please try again.");
+      } finally {
+        setSaving(false);
+      }
     }
   }
 
@@ -140,11 +166,16 @@ export default function CategoriesScreen() {
         })}
       </View>
 
-      <TouchableOpacity style={styles.button} onPress={handleContinue} activeOpacity={0.8}>
+      <TouchableOpacity
+        style={[styles.button, (selected.size === 0 || saving) && styles.buttonDisabled]}
+        onPress={handleContinue}
+        disabled={selected.size === 0 || saving}
+        activeOpacity={0.8}
+      >
         <Text style={styles.buttonText}>
-          {isEditMode ? "Save" : "Continue"}
+          {saving ? "Setting up your feed…" : isEditMode ? "Save" : "Continue"}
         </Text>
-        {!isEditMode && <Ionicons name="arrow-forward" size={16} color={Colors.background} />}
+        {!isEditMode && !saving && <Ionicons name="arrow-forward" size={16} color={Colors.background} />}
       </TouchableOpacity>
 
       {isEditMode && (
@@ -217,6 +248,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  buttonDisabled: { opacity: 0.4 },
   button: {
     backgroundColor: Colors.textPrimary,
     borderRadius: 12,
