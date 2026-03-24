@@ -56,7 +56,7 @@ export function NewsCard({ article, userId, email, username, isBookmarked = fals
   const bullets = article.summary.split("\n").filter(Boolean);
 
   async function handleVote(value: 1 | -1) {
-    if (!userId || isVoting) return;
+    if (!userId || !email || isVoting) return;
     const prev = localVote;
     const next = prev === value ? 0 : value;
     const effectiveUsername = username || email?.split("@")[0] || "user";
@@ -69,8 +69,8 @@ export function NewsCard({ article, userId, email, username, isBookmarked = fals
       // Sync counts from server response
       setUpvotes(result.upvotes);
       setDownvotes(result.downvotes);
-    } catch {
-      // Revert optimistic update on failure
+    } catch (err) {
+      console.error("[Vote] failed:", err, { userId, email, effectiveUsername, articleId: article.id, next });
       setLocalVote(prev);
       setUpvotes(article.upvotes);
       setDownvotes(article.downvotes);
