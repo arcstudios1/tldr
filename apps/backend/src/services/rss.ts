@@ -104,13 +104,19 @@ export async function fetchFeed(
   }
 }
 
+// Fetch feeds in small batches to stay within Railway's memory limits
+const BATCH_SIZE = 3;
+
 export async function fetchAllFeeds(): Promise<RawArticle[]> {
-  const results = await Promise.allSettled(RSS_FEEDS.map(fetchFeed));
   const articles: RawArticle[] = [];
 
-  for (const result of results) {
-    if (result.status === "fulfilled") {
-      articles.push(...result.value);
+  for (let i = 0; i < RSS_FEEDS.length; i += BATCH_SIZE) {
+    const batch = RSS_FEEDS.slice(i, i + BATCH_SIZE);
+    const results = await Promise.allSettled(batch.map(fetchFeed));
+    for (const result of results) {
+      if (result.status === "fulfilled") {
+        articles.push(...result.value);
+      }
     }
   }
 

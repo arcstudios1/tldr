@@ -128,13 +128,20 @@ export async function runPipeline(): Promise<void> {
 }
 
 export function startScheduler(): void {
-  // Run every hour (reduced from 30min — top stories don't change that fast)
-  cron.schedule("0 * * * *", async () => {
-    await runPipeline();
+  // Run every hour
+  cron.schedule("0 * * * *", () => {
+    runPipeline().catch((err) =>
+      console.error("[Scheduler] Cron pipeline error:", err)
+    );
   });
 
-  // Run once immediately on startup
-  runPipeline().catch(console.error);
+  // Delay the initial run by 15s so the server is fully up before we
+  // hit 12 RSS feeds and strain Railway's memory
+  setTimeout(() => {
+    runPipeline().catch((err) =>
+      console.error("[Scheduler] Startup pipeline error:", err)
+    );
+  }, 15_000);
 
-  console.log("[Scheduler] Pipeline scheduled every hour");
+  console.log("[Scheduler] Pipeline scheduled every hour (first run in 15s)");
 }
