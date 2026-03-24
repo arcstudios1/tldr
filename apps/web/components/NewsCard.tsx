@@ -27,9 +27,10 @@ interface Props {
   username: string | null;
   isBookmarked?: boolean;
   cardHeight: number;
+  onCommentPress?: () => void;
 }
 
-export function NewsCard({ article, userId, email, username, isBookmarked = false, cardHeight }: Props) {
+export function NewsCard({ article, userId, email, username, isBookmarked = false, cardHeight, onCommentPress }: Props) {
   const [localVote, setLocalVote] = useState<1 | -1 | 0>(0);
   const [upvotes, setUpvotes] = useState(article.upvotes);
   const [downvotes, setDownvotes] = useState(article.downvotes);
@@ -198,12 +199,13 @@ export function NewsCard({ article, userId, email, username, isBookmarked = fals
           >
             {localBookmark ? "🔖" : "🏷"}
           </button>
-          <div
-            className="flex items-center gap-1 px-3 h-8 rounded-full text-xs"
+          <button
+            onClick={onCommentPress}
+            className="flex items-center gap-1 px-3 h-8 rounded-full text-xs transition-colors"
             style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)", color: "var(--text-secondary)" }}
           >
             💬 {article.commentCount}
-          </div>
+          </button>
         </div>
       </div>
     </div>

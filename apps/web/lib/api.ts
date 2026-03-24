@@ -21,6 +21,18 @@ export interface FeedResponse {
   nextCursor: string | null;
 }
 
+export interface Comment {
+  id: string;
+  body: string;
+  createdAt: string;
+  user: { id: string; username: string };
+}
+
+export interface CommentsResponse {
+  items: Comment[];
+  nextCursor: string | null;
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     headers: { "Content-Type": "application/json" },
@@ -57,5 +69,14 @@ export const api = {
   removeBookmark: (articleId: string, userId: string) =>
     request<{ bookmarked: boolean }>(`/users/${userId}/bookmarks/${articleId}`, {
       method: "DELETE",
+    }),
+
+  getComments: (articleId: string): Promise<CommentsResponse> =>
+    request<CommentsResponse>(`/articles/${articleId}/comments`),
+
+  postComment: (articleId: string, userId: string, email: string, username: string, body: string): Promise<Comment> =>
+    request<Comment>(`/articles/${articleId}/comments`, {
+      method: "POST",
+      body: JSON.stringify({ userId, email, username, body }),
     }),
 };

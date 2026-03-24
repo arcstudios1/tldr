@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { api, Article, Category } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
 import { NewsCard } from "@/components/NewsCard";
 import { CategoryBar, TabValue } from "@/components/CategoryBar";
+import { LeftPanel } from "@/components/LeftPanel";
+import { RightPanel } from "@/components/RightPanel";
 import type { User } from "@supabase/supabase-js";
 
 const AD_INTERVAL = 6;
@@ -75,6 +77,8 @@ export default function FeedPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(false);
   const [cardHeight, setCardHeight] = useState(0);
+  const [activeIdx, setActiveIdx] = useState(0);
+  const [commentsPanelOpen, setCommentsPanelOpen] = useState(false);
   const feedRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
 
@@ -102,6 +106,25 @@ export default function FeedPage() {
     window.addEventListener("resize", measure);
     return () => window.removeEventListener("resize", measure);
   }, []);
+
+  // Track which card is snapped into view
+  useEffect(() => {
+    const el = feedRef.current;
+    if (!el || cardHeight === 0) return;
+    function handleScrollEnd() {
+      if (!el) return;
+      const idx = Math.round(el.scrollTop / cardHeight);
+      setActiveIdx(Math.max(0, idx));
+    }
+    el.addEventListener("scrollend", handleScrollEnd, { passive: true });
+    return () => el.removeEventListener("scrollend", handleScrollEnd);
+  }, [cardHeight]);
+
+  // Lock feed scroll while comments are open
+  useEffect(() => {
+    if (!feedRef.current) return;
+    feedRef.current.style.overflowY = commentsPanelOpen ? "hidden" : "";
+  }, [commentsPanelOpen]);
 
   // Load bookmarks
   useEffect(() => {
@@ -142,12 +165,43 @@ export default function FeedPage() {
 
   const feedItems: FeedItem[] = isSavedView ? bookmarks : injectAds(articles);
 
+  // Active article (for right panel)
+  const activeItem = feedItems[activeIdx];
+  const activeArticle = activeItem && !("type" in activeItem) ? (activeItem as Article) : null;
+
+  // Top 5 articles by engagement for trending panel
+  const trendingArticles = useMemo(
+    () =>
+      [...articles]
+        .sort((a, b) => b.upvotes + b.commentCount - (a.upvotes + a.commentCount))
+        .slice(0, 5),
+    [articles]
+  );
+
+  function scrollToArticle(id: string) {
+    const idx = feedItems.findIndex((item) => !("type" in item) && (item as Article).id === id);
+    if (idx >= 0 && feedRef.current) {
+      feedRef.current.scrollTo({ top: idx * cardHeight, behavior: "smooth" });
+    }
+  }
+
   return (
     <div style={{ position: "fixed", inset: 0, backgroundColor: "var(--bg)", display: "flex", justifyContent: "center" }}>
-      {/* Centered phone-width column — bordered on desktop so it looks intentional */}
+      {/* Max-width wrapper: left panel + center feed + right panel */}
+      <div style={{ display: "flex", width: "100%", maxWidth: 1040, height: "100%", alignItems: "stretch" }}>
+
+      {/* Left panel — desktop only */}
+      <LeftPanel
+        articles={articles}
+        selected={isSavedView ? null : (selectedTab as Category | null)}
+        onSelect={(cat) => setSelectedTab(cat)}
+      />
+
+      {/* Center feed column */}
       <div style={{
         width: "100%",
         maxWidth: 480,
+        flexShrink: 0,
         height: "100%",
         display: "flex",
         flexDirection: "column",
@@ -219,6 +273,7 @@ export default function FeedPage() {
                   username={user?.user_metadata?.username ?? null}
                   isBookmarked={bookmarkedIds.has((item as Article).id)}
                   cardHeight={cardHeight}
+                  onCommentPress={() => setCommentsPanelOpen(true)}
                 />
               )
             ))}
@@ -237,7 +292,21 @@ export default function FeedPage() {
           </>
         )}
       </div>
-      </div>
+      </div>{/* end center column */}
+
+      {/* Right panel — desktop only */}
+      <RightPanel
+        commentsOpen={commentsPanelOpen}
+        activeArticle={activeArticle}
+        trendingArticles={trendingArticles}
+        userId={user?.id ?? null}
+        email={user?.email ?? null}
+        username={user?.user_metadata?.username ?? null}
+        onClose={() => setCommentsPanelOpen(false)}
+        onScrollToArticle={scrollToArticle}
+      />
+
+      </div>{/* end max-width wrapper */}
     </div>
   );
 }
