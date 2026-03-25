@@ -38,6 +38,7 @@ interface Props {
   email: string | null;
   username: string | null;
   isBookmarked?: boolean;
+  onBookmarkToggle?: (articleId: string, bookmarked: boolean) => void;
   cardHeight: number;
   isActive?: boolean;
   isRead?: boolean;
@@ -45,7 +46,7 @@ interface Props {
 
 export function GistSkeleton({ cardHeight }: { cardHeight: number }) {
   const showComments = cardHeight >= 640;
-  const imageH = Math.round(cardHeight * (cardHeight >= 640 ? 0.22 : cardHeight >= 520 ? 0.18 : 0.15));
+  const imageH = Math.round(cardHeight * (showComments ? 0.22 : cardHeight >= 520 ? 0.18 : 0.15));
   return (
     <div
       className="feed-card flex flex-col"
@@ -87,7 +88,7 @@ export function GistSkeleton({ cardHeight }: { cardHeight: number }) {
   );
 }
 
-export function Gist({ article, userId, email, username, isBookmarked = false, cardHeight, isActive = false, isRead = false }: Props) {
+export function Gist({ article, userId, email, username, isBookmarked = false, onBookmarkToggle, cardHeight, isActive = false, isRead = false }: Props) {
   const [localVote, setLocalVote] = useState<1 | -1 | 0>((article.userVote as 1 | -1 | 0) ?? 0);
   const [upvotes, setUpvotes] = useState(article.upvotes);
   const [downvotes, setDownvotes] = useState(article.downvotes);
@@ -103,6 +104,7 @@ export function Gist({ article, userId, email, username, isBookmarked = false, c
   const [localCommentCount, setLocalCommentCount] = useState(article.commentCount);
 
   const [matchedMarket, setMatchedMarket] = useState<PredictionMarket | null | undefined>(undefined);
+  const [commentsForceOpen, setCommentsForceOpen] = useState(false);
 
   const [sourcesOpen, setSourcesOpen] = useState(false);
   const [sourcesData, setSourcesData] = useState<GistSource[]>([]);
@@ -119,21 +121,19 @@ export function Gist({ article, userId, email, username, isBookmarked = false, c
     setLocalVote((article.userVote as 1 | -1 | 0) ?? 0);
     setUpvotes(article.upvotes);
     setDownvotes(article.downvotes);
+    setLocalBookmark(isBookmarked);
     setLocalCommentCount(article.commentCount);
     setComments([]);
     setCommentBody("");
     setPostError(false);
     setCommentsFetched(false);
+    setCommentsForceOpen(false);
     setSourcesOpen(false);
     setSourcesData([]);
     setShareMenuOpen(false);
     setMatchedMarket(undefined);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [article.id]);
-
-  useEffect(() => {
-    setLocalBookmark(isBookmarked);
-  }, [isBookmarked]);
 
   // Fetch matched prediction market lazily on first visibility
   useEffect(() => {
@@ -184,12 +184,9 @@ export function Gist({ article, userId, email, username, isBookmarked = false, c
   const readTime = getGistReadTime();
   const freshness = getFreshnessTag(article.publishedAt, article.feedScore);
 
-  // Adaptive layout thresholds based on actual card height (accounts for both
-  // viewport height and header size — more reliable than CSS width breakpoints)
-  const showInlineComments = cardHeight >= 640;
-  const showMarketWidget   = cardHeight >= 520;
-  // Shrink the image on shorter cards so content below it isn't clipped
-  const imageHeight = Math.round(cardHeight * (cardHeight >= 640 ? 0.24 : cardHeight >= 520 ? 0.20 : 0.17));
+  const commentsAutoVisible = cardHeight >= 640;
+  const showComments = commentsAutoVisible || commentsForceOpen;
+  const imageHeight = Math.round(cardHeight * (commentsAutoVisible ? 0.24 : cardHeight >= 520 ? 0.20 : 0.17));
 
   const bullets = article.summary.split("\n").filter(Boolean);
   const effectiveUsername = username || email?.split("@")[0] || "user";
@@ -224,12 +221,14 @@ export function Gist({ article, userId, email, username, isBookmarked = false, c
     if (!userId) return;
     const next = !localBookmark;
     setLocalBookmark(next);
+    onBookmarkToggle?.(article.id, next);
     if (next) { setBookmarkPop(true); setTimeout(() => setBookmarkPop(false), 350); }
     try {
-      if (next) await api.addBookmark(article.id, userId, email!, username!);
+      if (next) await api.addBookmark(article.id, userId, email ?? "", username ?? "user");
       else await api.removeBookmark(article.id, userId);
     } catch {
       setLocalBookmark(!next);
+      onBookmarkToggle?.(article.id, !next);
     }
   }
 
@@ -463,8 +462,8 @@ export function Gist({ article, userId, email, username, isBookmarked = false, c
             </div>
           </div>
 
-          {/* Inline prediction market — only when card is tall enough */}
-          {showMarketWidget && matchedMarket && (
+          {/* Inline prediction market */}
+          {matchedMarket && (
             <a
               href={matchedMarket.affiliateUrl || matchedMarket.url}
               target="_blank"
@@ -553,9 +552,9 @@ export function Gist({ article, userId, email, username, isBookmarked = false, c
           </a>
         </div>
 
-        {/* Divider + comments — only when card is tall enough to show both */}
-        {showInlineComments && <div className="shrink-0 mx-5" style={{ height: 1, backgroundColor: "var(--border)" }} />}
-        <div className={`flex-col px-5 pt-3 pb-2 min-h-0 ${showInlineComments ? "flex" : "hidden"}`} style={{ flex: "3 1 0" }}>
+        {/* Divider + comments */}
+        {showComments && <div className="shrink-0 mx-5" style={{ height: 1, backgroundColor: "var(--border)" }} />}
+        <div className={`flex-col px-5 pt-3 pb-2 min-h-0 ${showComments ? "flex" : "hidden"}`} style={{ flex: "3 1 0" }}>
 
           <div className="flex items-center justify-between mb-2 shrink-0">
             <span className="text-xs font-semibold tracking-widest" style={{ color: "var(--text-muted)" }}>
@@ -733,9 +732,22 @@ export function Gist({ article, userId, email, username, isBookmarked = false, c
             </svg>
           </button>
           <button
-            onClick={() => composeRef.current?.focus()}
+            onClick={() => {
+              if (!commentsAutoVisible) {
+                setCommentsForceOpen((prev) => {
+                  if (!prev) setTimeout(() => composeRef.current?.focus(), 50);
+                  return !prev;
+                });
+              } else {
+                composeRef.current?.focus();
+              }
+            }}
             className="flex items-center gap-1.5 px-3 h-8 rounded-full text-xs transition-colors"
-            style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)", color: "var(--text-secondary)" }}
+            style={{
+              backgroundColor: commentsForceOpen ? "var(--accent-dim)" : "var(--surface)",
+              border: `1px solid ${commentsForceOpen ? "var(--accent)" : "var(--border)"}`,
+              color: commentsForceOpen ? "var(--accent)" : "var(--text-secondary)",
+            }}
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none">
               <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" />

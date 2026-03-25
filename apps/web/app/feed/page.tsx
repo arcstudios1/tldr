@@ -520,6 +520,13 @@ export default function FeedPage() {
                   email={user?.email ?? null}
                   username={user?.user_metadata?.username ?? null}
                   isBookmarked={bookmarkedIds.has((item as Article).id)}
+                  onBookmarkToggle={(id, bookmarked) => {
+                    setBookmarkedIds((prev) => {
+                      const next = new Set(prev);
+                      if (bookmarked) next.add(id); else next.delete(id);
+                      return next;
+                    });
+                  }}
                   cardHeight={cardHeight}
                   isActive={idx === activeCardIndex}
                   isRead={readIds.has((item as Article).id)}

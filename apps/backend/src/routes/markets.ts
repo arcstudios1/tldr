@@ -79,7 +79,7 @@ router.get("/for-article/:articleId", async (req: Request, res: Response) => {
 
   // Only return a keyword match OR a same-category market with meaningful volume
   const isKeywordMatch = best.score >= 1;
-  const isCategoryMatch = best.market.category === article.category && best.market.volume > 1_000_000;
+  const isCategoryMatch = best.market.category === article.category && best.market.volume > 100_000;
 
   if (!isKeywordMatch && !isCategoryMatch) {
     res.json({ market: null });
