@@ -13,14 +13,6 @@ router.get("/:articleId/sources", async (req: Request, res: Response) => {
       sourceName: true,
       sourceUrl: true,
       sourceCount: true,
-      sources: {
-        select: {
-          id: true,
-          sourceName: true,
-          sourceUrl: true,
-          imageUrl: true,
-        },
-      },
     },
   });
 
@@ -29,9 +21,14 @@ router.get("/:articleId/sources", async (req: Request, res: Response) => {
     return;
   }
 
+  const gistSources = await prisma.gistSource.findMany({
+    where: { articleId },
+    select: { id: true, sourceName: true, sourceUrl: true, imageUrl: true },
+  });
+
   const sources =
-    article.sources.length > 0
-      ? article.sources
+    gistSources.length > 0
+      ? gistSources
       : [
           {
             id: "primary",

@@ -110,7 +110,6 @@ router.get("/:id", async (req: Request, res: Response) => {
       feedScore: true,
       _count: { select: { comments: true } },
       votes: { select: { value: true } },
-      sources: { select: { id: true, sourceName: true, sourceUrl: true } },
     },
   });
 
@@ -118,6 +117,11 @@ router.get("/:id", async (req: Request, res: Response) => {
     res.status(404).json({ error: "Not found" });
     return;
   }
+
+  const gistSources = await prisma.gistSource.findMany({
+    where: { articleId: article.id },
+    select: { id: true, sourceName: true, sourceUrl: true },
+  });
 
   res.json({
     id: article.id,
@@ -134,7 +138,7 @@ router.get("/:id", async (req: Request, res: Response) => {
     commentCount: article._count.comments,
     upvotes: article.votes.filter((v) => v.value === 1).length,
     downvotes: article.votes.filter((v) => v.value === -1).length,
-    sources: article.sources,
+    sources: gistSources,
   });
 });
 
