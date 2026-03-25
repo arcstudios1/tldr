@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Link from "next/link";
-import { api, Article, Category } from "@/lib/api";
+import { api, Article, Category, FeedSort } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
-import { NewsCard } from "@/components/NewsCard";
+import { NewsCard, SkeletonCard } from "@/components/NewsCard";
 import { CategoryBar, TabValue } from "@/components/CategoryBar";
 import { LeftPanel } from "@/components/LeftPanel";
 import { RightPanel } from "@/components/RightPanel";
+import { SearchOverlay } from "@/components/SearchOverlay";
 import type { User } from "@supabase/supabase-js";
 
 const AD_INTERVAL = 6;
@@ -69,6 +70,7 @@ function AdCard({ cardHeight }: { cardHeight: number }) {
 export default function FeedPage() {
   const [user, setUser] = useState<User | null>(null);
   const [selectedTab, setSelectedTab] = useState<TabValue>(null);
+  const [feedSort, setFeedSort] = useState<FeedSort>("ranked");
   const [articles, setArticles] = useState<Article[]>([]);
   const [bookmarks, setBookmarks] = useState<Article[]>([]);
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
@@ -77,6 +79,8 @@ export default function FeedPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(false);
   const [cardHeight, setCardHeight] = useState(0);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [activeCardIndex, setActiveCardIndex] = useState(0);
   const feedRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
 
@@ -92,7 +96,7 @@ export default function FeedPage() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Card height: leave ~80px peeking so the next card is always visible
+  // Card height
   useEffect(() => {
     function measure() {
       if (feedRef.current) {
@@ -124,27 +128,28 @@ export default function FeedPage() {
         category: selectedCategory ?? undefined,
         cursor: reset ? undefined : nextCursor ?? undefined,
         userId: user?.id,
+        sort: feedSort,
       });
       setArticles(prev => reset ? res.items : [...prev, ...res.items]);
       setNextCursor(res.nextCursor);
+      if (reset) setActiveCardIndex(0);
     } catch {
       setError(true);
     } finally {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [selectedCategory, user, isSavedView, nextCursor]);
+  }, [selectedCategory, user, isSavedView, nextCursor, feedSort]);
 
   useEffect(() => {
     setArticles([]);
     setNextCursor(null);
     loadFeed(true);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedTab, user]);
+  }, [selectedTab, user, feedSort]);
 
   const feedItems: FeedItem[] = isSavedView ? bookmarks : injectAds(articles);
 
-  // Top 5 articles by engagement for trending panel
   const trendingArticles = useMemo(
     () =>
       [...articles]
@@ -157,15 +162,87 @@ export default function FeedPage() {
     const idx = feedItems.findIndex((item) => !("type" in item) && (item as Article).id === id);
     if (idx >= 0 && feedRef.current) {
       feedRef.current.scrollTo({ top: idx * cardHeight, behavior: "smooth" });
+      setActiveCardIndex(idx);
     }
   }
 
+  function scrollToIndex(idx: number) {
+    if (idx >= 0 && idx < feedItems.length && feedRef.current) {
+      feedRef.current.scrollTo({ top: idx * cardHeight, behavior: "smooth" });
+      setActiveCardIndex(idx);
+    }
+  }
+
+  // Keyboard navigation
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (searchOpen) return;
+
+      const target = e.target as HTMLElement;
+      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") return;
+
+      switch (e.key) {
+        case "j":
+        case "ArrowDown":
+          e.preventDefault();
+          scrollToIndex(Math.min(activeCardIndex + 1, feedItems.length - 1));
+          break;
+        case "k":
+        case "ArrowUp":
+          e.preventDefault();
+          scrollToIndex(Math.max(activeCardIndex - 1, 0));
+          break;
+        case "/":
+          e.preventDefault();
+          setSearchOpen(true);
+          break;
+        case "o": {
+          const item = feedItems[activeCardIndex];
+          if (item && !("type" in item)) {
+            window.open((item as Article).sourceUrl, "_blank");
+          }
+          break;
+        }
+        case "b": {
+          const item = feedItems[activeCardIndex];
+          if (item && !("type" in item) && user) {
+            const art = item as Article;
+            const isBm = bookmarkedIds.has(art.id);
+            if (isBm) {
+              api.removeBookmark(art.id, user.id).catch(() => {});
+              setBookmarkedIds((prev) => { const n = new Set(prev); n.delete(art.id); return n; });
+            } else {
+              api.addBookmark(art.id, user.id, user.email!, user.user_metadata?.username ?? "user").catch(() => {});
+              setBookmarkedIds((prev) => new Set(prev).add(art.id));
+            }
+          }
+          break;
+        }
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeCardIndex, feedItems, searchOpen, user, bookmarkedIds]);
+
+  // Track scroll position to update active card index
+  useEffect(() => {
+    const feed = feedRef.current;
+    if (!feed || cardHeight === 0) return;
+    function onScroll() {
+      const idx = Math.round(feed!.scrollTop / cardHeight);
+      setActiveCardIndex(idx);
+    }
+    feed.addEventListener("scroll", onScroll, { passive: true });
+    return () => feed.removeEventListener("scroll", onScroll);
+  }, [cardHeight]);
+
   return (
     <div style={{ position: "fixed", inset: 0, backgroundColor: "var(--bg)", display: "flex", justifyContent: "center" }}>
-      {/* Max-width wrapper: left panel + center feed + right panel */}
-      <div style={{ display: "flex", width: "100%", maxWidth: 1040, height: "100%", alignItems: "stretch" }}>
+      <div style={{ display: "flex", width: "100%", maxWidth: 1080, height: "100%", alignItems: "stretch" }}>
 
-      {/* Left panel — desktop only */}
+      {/* Left panel */}
       <LeftPanel
         articles={articles}
         selected={isSavedView ? null : (selectedTab as Category | null)}
@@ -175,7 +252,7 @@ export default function FeedPage() {
       {/* Center feed column */}
       <div style={{
         width: "100%",
-        maxWidth: 480,
+        maxWidth: 500,
         flexShrink: 0,
         height: "100%",
         display: "flex",
@@ -192,10 +269,38 @@ export default function FeedPage() {
           <Link href="/" className="wordmark text-xl font-bold" style={{ color: "var(--text-primary)" }}>
             tl;dr
           </Link>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            {/* Search button */}
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+              style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)", color: "var(--text-muted)" }}
+              title="Search (press /)"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+            </button>
+
+            {/* Daily Digest link */}
+            <Link
+              href="/digest"
+              className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+              style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)", color: "var(--text-muted)" }}
+              title="Daily Digest"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+              </svg>
+            </Link>
+
             {user ? (
               <div className="flex items-center gap-2">
-                <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+                <span className="text-xs hidden sm:inline" style={{ color: "var(--text-muted)" }}>
                   {user.user_metadata?.username ?? user.email}
                 </span>
                 <Link href="/profile" className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
@@ -210,15 +315,28 @@ export default function FeedPage() {
             )}
           </div>
         </div>
-        <CategoryBar selected={selectedTab} onSelect={setSelectedTab} />
+        <CategoryBar
+          selected={selectedTab}
+          onSelect={setSelectedTab}
+          sort={feedSort}
+          onSortChange={setFeedSort}
+        />
       </div>
 
-      {/* Feed — flex-1 fills remaining height, feed-container adds snap/scroll */}
+      {/* Feed */}
       <div ref={feedRef} className="feed-container" style={{ flex: 1, minHeight: 0 }}>
         {loading ? (
-          <div className="h-full flex items-center justify-center">
-            <div className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: "var(--accent)", borderTopColor: "transparent" }} />
-          </div>
+          cardHeight > 0 ? (
+            <>
+              <SkeletonCard cardHeight={cardHeight} />
+              <SkeletonCard cardHeight={cardHeight} />
+              <SkeletonCard cardHeight={cardHeight} />
+            </>
+          ) : (
+            <div className="h-full flex items-center justify-center">
+              <div className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: "var(--accent)", borderTopColor: "transparent" }} />
+            </div>
+          )
         ) : error ? (
           <div className="h-full flex flex-col items-center justify-center gap-3">
             <p style={{ color: "var(--text-secondary)" }}>Failed to load feed.</p>
@@ -228,7 +346,9 @@ export default function FeedPage() {
           </div>
         ) : isSavedView && feedItems.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center gap-3">
-            <p className="text-2xl">🔖</p>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--text-muted)" }}>
+              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+            </svg>
             <p className="font-medium" style={{ color: "var(--text-secondary)" }}>No saved articles yet</p>
             <p className="text-sm text-center px-8" style={{ color: "var(--text-muted)" }}>
               Bookmark articles from the feed and they&apos;ll appear here.
@@ -236,7 +356,7 @@ export default function FeedPage() {
           </div>
         ) : (
           <>
-            {cardHeight > 0 && feedItems.map((item) => (
+            {cardHeight > 0 && feedItems.map((item, idx) => (
               "type" in item && item.type === "ad" ? (
                 <AdCard key={item.id} cardHeight={cardHeight} />
               ) : (
@@ -248,6 +368,7 @@ export default function FeedPage() {
                   username={user?.user_metadata?.username ?? null}
                   isBookmarked={bookmarkedIds.has((item as Article).id)}
                   cardHeight={cardHeight}
+                  isActive={idx === activeCardIndex}
                 />
               )
             ))}
@@ -268,13 +389,24 @@ export default function FeedPage() {
       </div>
       </div>{/* end center column */}
 
-      {/* Right panel — desktop only */}
+      {/* Right panel */}
       <RightPanel
         trendingArticles={trendingArticles}
         onScrollToArticle={scrollToArticle}
       />
 
       </div>{/* end max-width wrapper */}
+
+      {/* Search overlay */}
+      {searchOpen && (
+        <SearchOverlay
+          onClose={() => setSearchOpen(false)}
+          onSelectArticle={(article) => {
+            setSearchOpen(false);
+            window.open(article.sourceUrl, "_blank");
+          }}
+        />
+      )}
     </div>
   );
 }

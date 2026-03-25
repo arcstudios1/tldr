@@ -2,6 +2,8 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import feedRouter from "./routes/feed";
+import searchRouter from "./routes/search";
+import digestRouter from "./routes/digest";
 import votesRouter from "./routes/votes";
 import commentsRouter from "./routes/comments";
 import preferencesRouter from "./routes/preferences";
@@ -24,6 +26,8 @@ app.post("/admin/run-pipeline", async (_req, res) => {
 });
 
 app.use("/feed", feedLimiter, feedRouter);
+app.use("/search", feedLimiter, searchRouter);
+app.use("/digest", feedLimiter, digestRouter);
 app.use("/articles", writeLimiter, votesRouter);
 app.use("/articles", writeLimiter, commentsRouter);
 app.use("/users", writeLimiter, preferencesRouter);

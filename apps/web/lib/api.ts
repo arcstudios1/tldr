@@ -1,6 +1,7 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://tldr.up.railway.app";
 
 export type Category = "TECH" | "FINANCE" | "POLITICS" | "CULTURE" | "SPORTS";
+export type FeedSort = "ranked" | "latest";
 
 export interface Article {
   id: string;
@@ -11,6 +12,9 @@ export interface Article {
   sourceName: string;
   category: Category;
   publishedAt: string;
+  sourceCount: number;
+  importanceScore: number;
+  feedScore: number;
   upvotes: number;
   downvotes: number;
   commentCount: number;
@@ -25,6 +29,22 @@ export interface Preferences {
 export interface FeedResponse {
   items: Article[];
   nextCursor: string | null;
+}
+
+export interface SearchResponse {
+  items: Article[];
+  nextCursor: string | null;
+  query: string;
+}
+
+export interface DigestResponse {
+  date: string;
+  items: Article[];
+  stats: {
+    totalArticles: number;
+    totalSources: number;
+    categories: { category: Category; count: number }[];
+  };
 }
 
 export interface Comment {
@@ -73,13 +93,27 @@ export const api = {
       body: JSON.stringify({ email, username, categories, excludedSources }),
     }),
 
-  getFeed: (params: { category?: Category; cursor?: string; userId?: string }): Promise<FeedResponse> => {
+  getFeed: (params: {
+    category?: Category;
+    cursor?: string;
+    userId?: string;
+    sort?: FeedSort;
+  }): Promise<FeedResponse> => {
     const query = new URLSearchParams();
     if (params.category) query.set("category", params.category);
     if (params.cursor) query.set("cursor", params.cursor);
     if (params.userId) query.set("userId", params.userId);
+    if (params.sort) query.set("sort", params.sort);
     return request<FeedResponse>(`/feed?${query}`);
   },
+
+  search: (q: string, limit = 15): Promise<SearchResponse> => {
+    const query = new URLSearchParams({ q, limit: String(limit) });
+    return request<SearchResponse>(`/search?${query}`);
+  },
+
+  getDigest: (): Promise<DigestResponse> =>
+    request<DigestResponse>("/digest"),
 
   vote: (articleId: string, userId: string, email: string, username: string, value: 1 | -1 | 0) =>
     request<{ upvotes: number; downvotes: number; userVote: number }>(

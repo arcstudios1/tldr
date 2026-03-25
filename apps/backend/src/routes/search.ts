@@ -1,54 +1,34 @@
 import { Router, Request, Response } from "express";
 import { z } from "zod";
 import { prisma } from "../db/client";
-import { Category } from "@prisma/client";
 
 const router = Router();
 
-const FeedQuerySchema = z.object({
-  category: z.nativeEnum(Category).optional(),
+const SearchSchema = z.object({
+  q: z.string().min(1).max(200),
+  limit: z.coerce.number().min(1).max(30).default(15),
   cursor: z.string().optional(),
-  limit: z.coerce.number().min(1).max(50).default(20),
-  userId: z.string().optional(),
-  sort: z.enum(["ranked", "latest"]).default("ranked"),
 });
 
 router.get("/", async (req: Request, res: Response) => {
-  const parsed = FeedQuerySchema.safeParse(req.query);
+  const parsed = SearchSchema.safeParse(req.query);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.flatten() });
     return;
   }
 
-  const { category, cursor, limit, userId, sort } = parsed.data;
-
-  let preferredCategories: Category[] = [];
-  let excludedSources: string[] = [];
-
-  if (userId) {
-    const prefs = await prisma.userPreference.findUnique({ where: { userId } });
-    if (prefs) {
-      preferredCategories = prefs.categories;
-      excludedSources = prefs.excludedSources;
-    }
-  }
+  const { q, limit, cursor } = parsed.data;
 
   const articles = await prisma.article.findMany({
     where: {
       isAd: false,
-      // Category bar selection takes priority; fall back to user prefs
-      ...(category
-        ? { category }
-        : preferredCategories.length > 0
-          ? { category: { in: preferredCategories } }
-          : {}),
-      ...(excludedSources.length > 0
-        ? { sourceName: { notIn: excludedSources } }
-        : {}),
+      OR: [
+        { title: { contains: q, mode: "insensitive" } },
+        { summary: { contains: q, mode: "insensitive" } },
+        { sourceName: { contains: q, mode: "insensitive" } },
+      ],
     },
-    orderBy: sort === "latest"
-      ? [{ publishedAt: "desc" }]
-      : [{ feedScore: "desc" }, { publishedAt: "desc" }],
+    orderBy: [{ feedScore: "desc" }, { publishedAt: "desc" }],
     take: limit + 1,
     ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
     select: {
@@ -64,7 +44,7 @@ router.get("/", async (req: Request, res: Response) => {
       importanceScore: true,
       feedScore: true,
       _count: { select: { comments: true } },
-      votes: { select: { value: true, userId: true } },
+      votes: { select: { value: true } },
     },
   });
 
@@ -87,10 +67,10 @@ router.get("/", async (req: Request, res: Response) => {
     commentCount: a._count.comments,
     upvotes: a.votes.filter((v) => v.value === 1).length,
     downvotes: a.votes.filter((v) => v.value === -1).length,
-    userVote: userId ? (a.votes.find((v) => v.userId === userId)?.value ?? 0) : 0,
+    userVote: 0,
   }));
 
-  res.json({ items: normalized, nextCursor });
+  res.json({ items: normalized, nextCursor, query: q });
 });
 
 export default router;

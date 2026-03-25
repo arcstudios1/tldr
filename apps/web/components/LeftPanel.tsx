@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import Link from "next/link";
 import { Article, Category } from "@/lib/api";
 
 const CATEGORY_CONFIG: { value: Category; label: string; color: string }[] = [
@@ -35,12 +36,22 @@ export function LeftPanel({ articles, selected, onSelect }: Props) {
 
   const total = articles.length;
 
-  // Most recent article's publish date as a proxy for last updated
+  const uniqueSources = useMemo(() => {
+    const sources = new Set<string>();
+    articles.forEach((a) => sources.add(a.sourceName));
+    return sources.size;
+  }, [articles]);
+
+  const multiSourceCount = useMemo(
+    () => articles.filter((a) => a.sourceCount > 1).length,
+    [articles]
+  );
+
   const lastUpdated = articles.length > 0 ? new Date(articles[0].publishedAt) : null;
 
   return (
     <div
-      className="hidden lg:flex flex-col gap-8 pt-6 pr-8"
+      className="hidden lg:flex flex-col gap-6 pt-6 pr-8"
       style={{ width: 220, flexShrink: 0 }}
     >
       {/* Wordmark + tagline */}
@@ -52,6 +63,29 @@ export function LeftPanel({ articles, selected, onSelect }: Props) {
           The news. In seconds.
         </div>
       </div>
+
+      {/* Feed transparency stats */}
+      {total > 0 && (
+        <div
+          className="flex flex-col gap-2 px-3 py-3 rounded-xl"
+          style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs" style={{ color: "var(--text-muted)" }}>Stories</span>
+            <span className="text-xs font-semibold tabular-nums" style={{ color: "var(--text-primary)" }}>{total}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-xs" style={{ color: "var(--text-muted)" }}>Sources</span>
+            <span className="text-xs font-semibold tabular-nums" style={{ color: "var(--text-primary)" }}>{uniqueSources}</span>
+          </div>
+          {multiSourceCount > 0 && (
+            <div className="flex items-center justify-between">
+              <span className="text-xs" style={{ color: "var(--text-muted)" }}>Multi-source</span>
+              <span className="text-xs font-semibold tabular-nums" style={{ color: "var(--accent)" }}>{multiSourceCount}</span>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Category breakdown */}
       <div>
@@ -86,7 +120,6 @@ export function LeftPanel({ articles, selected, onSelect }: Props) {
                     {count}
                   </span>
                 </div>
-                {/* Progress bar */}
                 <div
                   className="w-full rounded-full"
                   style={{ height: 2, backgroundColor: "var(--border)" }}
@@ -104,6 +137,23 @@ export function LeftPanel({ articles, selected, onSelect }: Props) {
             );
           })}
         </div>
+      </div>
+
+      {/* Quick links */}
+      <div className="flex flex-col gap-2">
+        <Link
+          href="/digest"
+          className="flex items-center gap-2 text-xs px-3 py-2 rounded-lg transition-colors"
+          style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)", color: "var(--text-secondary)" }}
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+            <line x1="16" y1="13" x2="8" y2="13" />
+            <line x1="16" y1="17" x2="8" y2="17" />
+          </svg>
+          Daily Digest
+        </Link>
       </div>
 
       {/* Live indicator */}

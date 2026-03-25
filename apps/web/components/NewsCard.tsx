@@ -21,6 +21,19 @@ function formatTimeAgo(date: Date): string {
   return `${Math.floor(hours / 24)}d ago`;
 }
 
+function getReadingTime(summary: string): string {
+  const wordCount = summary.split(/\s+/).length;
+  const minutes = Math.max(1, Math.ceil(wordCount / 200));
+  return `${minutes} min`;
+}
+
+function getFreshnessTag(publishedAt: string, feedScore: number): "breaking" | "new" | null {
+  const hoursOld = (Date.now() - new Date(publishedAt).getTime()) / (1000 * 60 * 60);
+  if (hoursOld <= 2 && feedScore > 1.5) return "breaking";
+  if (hoursOld <= 4) return "new";
+  return null;
+}
+
 interface Props {
   article: Article;
   userId: string | null;
@@ -28,9 +41,52 @@ interface Props {
   username: string | null;
   isBookmarked?: boolean;
   cardHeight: number;
+  isActive?: boolean;
 }
 
-export function NewsCard({ article, userId, email, username, isBookmarked = false, cardHeight }: Props) {
+export function SkeletonCard({ cardHeight }: { cardHeight: number }) {
+  return (
+    <div
+      className="feed-card flex flex-col"
+      style={{ height: cardHeight, backgroundColor: "var(--bg)", borderBottom: "1px solid var(--border)" }}
+    >
+      <div className="flex items-center gap-2 px-5 pt-4 pb-3 shrink-0">
+        <div className="skeleton" style={{ width: 56, height: 20 }} />
+        <div className="skeleton flex-1" style={{ height: 14 }} />
+        <div className="skeleton" style={{ width: 40, height: 14 }} />
+      </div>
+      <div className="flex-1 flex flex-col px-5 pb-3 gap-3" style={{ flex: "7 1 0" }}>
+        <div className="skeleton w-full rounded-lg shrink-0" style={{ height: Math.round(cardHeight * 0.22) }} />
+        <div className="skeleton skeleton-text-lg w-4/5" />
+        <div className="skeleton skeleton-text-lg w-3/5" />
+        <div className="flex flex-col gap-2 mt-1">
+          <div className="skeleton skeleton-text w-full" />
+          <div className="skeleton skeleton-text w-11/12" />
+          <div className="skeleton skeleton-text w-4/5" />
+        </div>
+      </div>
+      <div className="shrink-0 mx-5" style={{ height: 1, backgroundColor: "var(--border)" }} />
+      <div className="px-5 pt-3 pb-2" style={{ flex: "3 1 0" }}>
+        <div className="skeleton skeleton-text w-1/3 mb-3" />
+        <div className="skeleton skeleton-text w-full mb-2" />
+        <div className="skeleton skeleton-text w-2/3" />
+      </div>
+      <div className="flex items-center justify-between px-5 py-3 shrink-0" style={{ borderTop: "1px solid var(--border)" }}>
+        <div className="flex items-center gap-1.5">
+          <div className="skeleton" style={{ width: 52, height: 28, borderRadius: 9999 }} />
+          <div className="skeleton" style={{ width: 52, height: 28, borderRadius: 9999 }} />
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="skeleton" style={{ width: 32, height: 32, borderRadius: 9999 }} />
+          <div className="skeleton" style={{ width: 32, height: 32, borderRadius: 9999 }} />
+          <div className="skeleton" style={{ width: 52, height: 32, borderRadius: 9999 }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function NewsCard({ article, userId, email, username, isBookmarked = false, cardHeight, isActive = false }: Props) {
   const [localVote, setLocalVote] = useState<1 | -1 | 0>((article.userVote as 1 | -1 | 0) ?? 0);
   const [upvotes, setUpvotes] = useState(article.upvotes);
   const [downvotes, setDownvotes] = useState(article.downvotes);
@@ -48,7 +104,6 @@ export function NewsCard({ article, userId, email, username, isBookmarked = fals
   const cardRef = useRef<HTMLDivElement>(null);
   const composeRef = useRef<HTMLInputElement>(null);
 
-  // Reset all local state when a new article occupies this card slot
   useEffect(() => {
     setLocalVote((article.userVote as 1 | -1 | 0) ?? 0);
     setUpvotes(article.upvotes);
@@ -61,12 +116,10 @@ export function NewsCard({ article, userId, email, username, isBookmarked = fals
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [article.id]);
 
-  // Sync bookmark when parent finishes loading
   useEffect(() => {
     setLocalBookmark(isBookmarked);
   }, [isBookmarked]);
 
-  // Lazy-load comments when card scrolls into view (avoids N requests on mount)
   useEffect(() => {
     if (commentsFetched) return;
     const el = cardRef.current;
@@ -92,10 +145,11 @@ export function NewsCard({ article, userId, email, username, isBookmarked = fals
 
   const categoryColor = CATEGORY_COLORS[article.category] ?? "#60a5fa";
   const timeAgo = formatTimeAgo(new Date(article.publishedAt));
+  const readTime = getReadingTime(article.summary);
+  const freshness = getFreshnessTag(article.publishedAt, article.feedScore);
   const imageHeight = Math.round(cardHeight * 0.24);
   const bullets = article.summary.split("\n").filter(Boolean);
   const effectiveUsername = username || email?.split("@")[0] || "user";
-  // Show 2 comments in the 30% section — keeps each entry readable
   const visibleComments = comments.slice(0, 2);
   const hiddenCount = comments.length > 2 ? comments.length - 2 : 0;
 
@@ -160,7 +214,7 @@ export function NewsCard({ article, userId, email, username, isBookmarked = fals
   return (
     <div
       ref={cardRef}
-      className="feed-card flex flex-col"
+      className={`feed-card flex flex-col ${isActive ? "feed-card-active" : ""}`}
       style={{
         height: cardHeight,
         backgroundColor: "var(--bg)",
@@ -175,18 +229,49 @@ export function NewsCard({ article, userId, email, username, isBookmarked = fals
         >
           {article.category}
         </span>
-        <span className="text-sm flex-1" style={{ color: "var(--text-secondary)" }}>
+
+        {/* Freshness tag */}
+        {freshness === "breaking" && (
+          <span className="freshness-tag freshness-breaking">
+            <span style={{ width: 5, height: 5, borderRadius: "50%", backgroundColor: "#f87171", display: "inline-block" }} />
+            Breaking
+          </span>
+        )}
+        {freshness === "new" && (
+          <span className="freshness-tag freshness-new">New</span>
+        )}
+
+        {/* Source coverage badge */}
+        {article.sourceCount > 1 && (
+          <span className="source-badge">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+              <line x1="8" y1="21" x2="16" y2="21" />
+              <line x1="12" y1="17" x2="12" y2="21" />
+            </svg>
+            {article.sourceCount} sources
+          </span>
+        )}
+
+        <span className="text-sm flex-1 text-right truncate" style={{ color: "var(--text-secondary)" }}>
           {article.sourceName}
         </span>
-        <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+        <span className="reading-time shrink-0">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <polyline points="12 6 12 12 16 14" />
+          </svg>
+          {readTime}
+        </span>
+        <span className="text-xs shrink-0" style={{ color: "var(--text-muted)" }}>
           {timeAgo}
         </span>
       </div>
 
-      {/* Body: article content (top) + comments (bottom), 50/50 split */}
+      {/* Body: article content (70%) + comments (30%) */}
       <div className="flex-1 flex flex-col min-h-0">
 
-        {/* ── Article content — 70% ── */}
+        {/* Article content — 70% */}
         <div className="flex flex-col px-5 pb-3 gap-2 overflow-hidden min-h-0" style={{ flex: "7 1 0" }}>
           {article.imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -240,13 +325,12 @@ export function NewsCard({ article, userId, email, username, isBookmarked = fals
           </a>
         </div>
 
-        {/* ── Divider ── */}
+        {/* Divider */}
         <div className="shrink-0 mx-5" style={{ height: 1, backgroundColor: "var(--border)" }} />
 
-        {/* ── Comments section — 30% ── */}
+        {/* Comments section — 30% */}
         <div className="flex flex-col px-5 pt-3 pb-2 min-h-0" style={{ flex: "3 1 0" }}>
 
-          {/* Section label */}
           <div className="flex items-center justify-between mb-2 shrink-0">
             <span className="text-xs font-semibold tracking-widest" style={{ color: "var(--text-muted)" }}>
               DISCUSSION
@@ -258,7 +342,6 @@ export function NewsCard({ article, userId, email, username, isBookmarked = fals
             )}
           </div>
 
-          {/* Comment list */}
           <div className="flex-1 flex flex-col gap-3 overflow-hidden min-h-0">
             {commentsLoading ? (
               <div className="flex justify-center pt-3">
@@ -297,7 +380,6 @@ export function NewsCard({ article, userId, email, username, isBookmarked = fals
             )}
           </div>
 
-          {/* Compose row */}
           <div className="shrink-0 pt-2" style={{ borderTop: "1px solid var(--border)" }}>
             {userId ? (
               <>
@@ -394,7 +476,6 @@ export function NewsCard({ article, userId, email, username, isBookmarked = fals
               <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
             </svg>
           </button>
-          {/* Comment button focuses the compose input */}
           <button
             onClick={() => composeRef.current?.focus()}
             className="flex items-center gap-1.5 px-3 h-8 rounded-full text-xs transition-colors"
