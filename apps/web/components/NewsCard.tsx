@@ -92,11 +92,12 @@ export function NewsCard({ article, userId, email, username, isBookmarked = fals
 
   const categoryColor = CATEGORY_COLORS[article.category] ?? "#60a5fa";
   const timeAgo = formatTimeAgo(new Date(article.publishedAt));
-  const imageHeight = Math.round(cardHeight * 0.17);
+  const imageHeight = Math.round(cardHeight * 0.24);
   const bullets = article.summary.split("\n").filter(Boolean);
   const effectiveUsername = username || email?.split("@")[0] || "user";
-  const visibleComments = comments.slice(0, 3);
-  const hiddenCount = comments.length > 3 ? comments.length - 3 : 0;
+  // Show 2 comments in the 30% section — keeps each entry readable
+  const visibleComments = comments.slice(0, 2);
+  const hiddenCount = comments.length > 2 ? comments.length - 2 : 0;
 
   async function handleVote(value: 1 | -1) {
     if (!userId || !email || isVoting) return;
@@ -185,8 +186,8 @@ export function NewsCard({ article, userId, email, username, isBookmarked = fals
       {/* Body: article content (top) + comments (bottom), 50/50 split */}
       <div className="flex-1 flex flex-col min-h-0">
 
-        {/* ── Article content ── */}
-        <div className="flex-1 flex flex-col px-5 pb-3 gap-2 overflow-hidden min-h-0">
+        {/* ── Article content — 70% ── */}
+        <div className="flex flex-col px-5 pb-3 gap-2 overflow-hidden min-h-0" style={{ flex: "7 1 0" }}>
           {article.imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -206,7 +207,7 @@ export function NewsCard({ article, userId, email, username, isBookmarked = fals
 
           <h2
             className="font-bold leading-tight shrink-0"
-            style={{ fontSize: 22, color: "var(--text-primary)", lineHeight: 1.25 }}
+            style={{ fontSize: 24, color: "var(--text-primary)", lineHeight: 1.25 }}
           >
             {article.title}
           </h2>
@@ -220,7 +221,7 @@ export function NewsCard({ article, userId, email, username, isBookmarked = fals
               {bullets.map((point, i) => (
                 <div key={i} className="flex gap-1.5 items-start">
                   <span className="shrink-0 mt-1" style={{ color: "var(--accent)", fontSize: 6 }}>●</span>
-                  <p className="leading-snug" style={{ fontSize: 15, color: "var(--text-primary)" }}>
+                  <p className="leading-snug" style={{ fontSize: 16, color: "var(--text-primary)" }}>
                     {point}
                   </p>
                 </div>
@@ -242,8 +243,8 @@ export function NewsCard({ article, userId, email, username, isBookmarked = fals
         {/* ── Divider ── */}
         <div className="shrink-0 mx-5" style={{ height: 1, backgroundColor: "var(--border)" }} />
 
-        {/* ── Comments section ── */}
-        <div className="flex-1 flex flex-col px-5 pt-3 pb-2 min-h-0">
+        {/* ── Comments section — 30% ── */}
+        <div className="flex flex-col px-5 pt-3 pb-2 min-h-0" style={{ flex: "3 1 0" }}>
 
           {/* Section label */}
           <div className="flex items-center justify-between mb-2 shrink-0">
@@ -258,7 +259,7 @@ export function NewsCard({ article, userId, email, username, isBookmarked = fals
           </div>
 
           {/* Comment list */}
-          <div className="flex-1 flex flex-col gap-2 overflow-hidden min-h-0">
+          <div className="flex-1 flex flex-col gap-3 overflow-hidden min-h-0">
             {commentsLoading ? (
               <div className="flex justify-center pt-3">
                 <div
@@ -275,14 +276,14 @@ export function NewsCard({ article, userId, email, username, isBookmarked = fals
                 {visibleComments.map((c) => (
                   <div key={c.id} className="flex flex-col gap-0.5">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-semibold" style={{ color: "var(--accent)" }}>
+                      <span className="text-sm font-semibold" style={{ color: "var(--accent)" }}>
                         {c.user.username}
                       </span>
                       <span className="text-xs" style={{ color: "var(--text-muted)" }}>
                         · {formatTimeAgo(new Date(c.createdAt))}
                       </span>
                     </div>
-                    <p className="text-sm leading-snug" style={{ color: "var(--text-primary)" }}>
+                    <p className="leading-relaxed" style={{ fontSize: 14, color: "var(--text-primary)" }}>
                       {c.body}
                     </p>
                   </div>
