@@ -73,3 +73,29 @@ body {
   background: var(--accent);
   flex-shrink: 0;
 }
+
+/* Landing page animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+.animate-float {
+  animation: float 5s ease-in-out 1s infinite;
+}
+
+.animate-ready {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.55s ease, transform 0.55s ease;
+}
+
+.animate-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
