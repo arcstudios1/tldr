@@ -12,6 +12,28 @@ import { SearchOverlay } from "@/components/SearchOverlay";
 import type { User } from "@supabase/supabase-js";
 
 const AD_INTERVAL = 6;
+const READ_STORAGE_KEY = "tldr-read-articles";
+
+function getReadArticles(): Set<string> {
+  if (typeof window === "undefined") return new Set();
+  try {
+    const raw = localStorage.getItem(READ_STORAGE_KEY);
+    return raw ? new Set(JSON.parse(raw)) : new Set();
+  } catch {
+    return new Set();
+  }
+}
+
+function markAsRead(articleId: string) {
+  if (typeof window === "undefined") return;
+  try {
+    const read = getReadArticles();
+    read.add(articleId);
+    // Keep only the most recent 500 to avoid unbounded growth
+    const arr = Array.from(read).slice(-500);
+    localStorage.setItem(READ_STORAGE_KEY, JSON.stringify(arr));
+  } catch { /* ignore quota errors */ }
+}
 
 type FeedItem = Article | { type: "ad"; id: string };
 
@@ -81,11 +103,31 @@ export default function FeedPage() {
   const [cardHeight, setCardHeight] = useState(0);
   const [searchOpen, setSearchOpen] = useState(false);
   const [activeCardIndex, setActiveCardIndex] = useState(0);
+  const [readIds, setReadIds] = useState<Set<string>>(new Set());
   const feedRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
 
   const isSavedView = selectedTab === "SAVED";
   const selectedCategory = isSavedView ? null : (selectedTab as Category | null);
+
+  // Load read history from localStorage
+  useEffect(() => {
+    setReadIds(getReadArticles());
+  }, []);
+
+  // Mark active article as read after 1.5s of viewing
+  useEffect(() => {
+    const item = feedItems[activeCardIndex];
+    if (!item || "type" in item) return;
+    const articleId = (item as Article).id;
+    if (readIds.has(articleId)) return;
+    const timer = setTimeout(() => {
+      markAsRead(articleId);
+      setReadIds((prev) => new Set(prev).add(articleId));
+    }, 1500);
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeCardIndex, feedItems]);
 
   // Auth
   useEffect(() => {
@@ -226,17 +268,30 @@ export default function FeedPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeCardIndex, feedItems, searchOpen, user, bookmarkedIds]);
 
-  // Track scroll position to update active card index
+  // Track scroll position to update active card index + auto-prefetch
+  const loadingMoreRef = useRef(false);
   useEffect(() => {
     const feed = feedRef.current;
     if (!feed || cardHeight === 0) return;
     function onScroll() {
       const idx = Math.round(feed!.scrollTop / cardHeight);
       setActiveCardIndex(idx);
+
+      // Auto-prefetch when within 2 cards of the end
+      if (
+        nextCursor &&
+        !isSavedView &&
+        !loadingMoreRef.current &&
+        idx >= feedItems.length - 3
+      ) {
+        loadingMoreRef.current = true;
+        loadFeed(false).finally(() => { loadingMoreRef.current = false; });
+      }
     }
     feed.addEventListener("scroll", onScroll, { passive: true });
     return () => feed.removeEventListener("scroll", onScroll);
-  }, [cardHeight]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cardHeight, nextCursor, isSavedView, feedItems.length]);
 
   return (
     <div style={{ position: "fixed", inset: 0, backgroundColor: "var(--bg)", display: "flex", justifyContent: "center" }}>
@@ -251,9 +306,9 @@ export default function FeedPage() {
 
       {/* Center feed column */}
       <div style={{
-        width: "100%",
+        flex: "1 1 0",
         maxWidth: 500,
-        flexShrink: 0,
+        minWidth: 0,
         height: "100%",
         display: "flex",
         flexDirection: "column",
@@ -369,6 +424,7 @@ export default function FeedPage() {
                   isBookmarked={bookmarkedIds.has((item as Article).id)}
                   cardHeight={cardHeight}
                   isActive={idx === activeCardIndex}
+                  isRead={readIds.has((item as Article).id)}
                 />
               )
             ))}

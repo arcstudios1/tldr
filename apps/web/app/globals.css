@@ -247,3 +247,22 @@ body {
   border-color: var(--accent);
   transform: translateY(-2px);
 }
+
+/* Mobile responsive: hide panels, expand center column */
+@media (max-width: 1023px) {
+  .source-badge {
+    font-size: 9px;
+    padding: 1px 5px;
+  }
+  .freshness-tag {
+    font-size: 8px;
+    padding: 1px 5px;
+  }
+}
+
+/* Small screens: tighter feed header */
+@media (max-width: 640px) {
+  .feed-container {
+    scroll-snap-type: y proximity;
+  }
+}

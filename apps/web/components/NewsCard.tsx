@@ -42,6 +42,7 @@ interface Props {
   isBookmarked?: boolean;
   cardHeight: number;
   isActive?: boolean;
+  isRead?: boolean;
 }
 
 export function SkeletonCard({ cardHeight }: { cardHeight: number }) {
@@ -86,7 +87,7 @@ export function SkeletonCard({ cardHeight }: { cardHeight: number }) {
   );
 }
 
-export function NewsCard({ article, userId, email, username, isBookmarked = false, cardHeight, isActive = false }: Props) {
+export function NewsCard({ article, userId, email, username, isBookmarked = false, cardHeight, isActive = false, isRead = false }: Props) {
   const [localVote, setLocalVote] = useState<1 | -1 | 0>((article.userVote as 1 | -1 | 0) ?? 0);
   const [upvotes, setUpvotes] = useState(article.upvotes);
   const [downvotes, setDownvotes] = useState(article.downvotes);
@@ -266,6 +267,13 @@ export function NewsCard({ article, userId, email, username, isBookmarked = fals
         <span className="text-xs shrink-0" style={{ color: "var(--text-muted)" }}>
           {timeAgo}
         </span>
+        {isRead && (
+          <span className="text-xs shrink-0" style={{ color: "var(--text-muted)", opacity: 0.6 }} title="You've read this">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </span>
+        )}
       </div>
 
       {/* Body: article content (70%) + comments (30%) */}

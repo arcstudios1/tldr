@@ -77,6 +77,39 @@ const FEATURES: { icon: React.ReactNode; title: string; desc: string }[] = [
   {
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--accent)" }}>
+        <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+        <line x1="8" y1="21" x2="16" y2="21" />
+        <line x1="12" y1="17" x2="12" y2="21" />
+      </svg>
+    ),
+    title: "Multi-source verification",
+    desc: "See how many outlets covered each story. More sources = more significant. Transparency built into every card.",
+  },
+  {
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--accent)" }}>
+        <circle cx="11" cy="11" r="8" />
+        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+      </svg>
+    ),
+    title: "Instant search",
+    desc: "Find any story across every source and category. Search by headline, topic, or outlet — results in real time.",
+  },
+  {
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--accent)" }}>
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
+        <line x1="16" y1="13" x2="8" y2="13" />
+        <line x1="16" y1="17" x2="8" y2="17" />
+      </svg>
+    ),
+    title: "Daily digest",
+    desc: "Today's most important stories, ranked and ready. One page, every morning — your briefing in under two minutes.",
+  },
+  {
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--accent)" }}>
         <line x1="4" y1="6" x2="20" y2="6" />
         <circle cx="9" cy="6" r="2.5" fill="var(--bg)" stroke="currentColor" strokeWidth="1.75" />
         <line x1="4" y1="12" x2="20" y2="12" />
@@ -85,17 +118,8 @@ const FEATURES: { icon: React.ReactNode; title: string; desc: string }[] = [
         <circle cx="10" cy="18" r="2.5" fill="var(--bg)" stroke="currentColor" strokeWidth="1.75" />
       </svg>
     ),
-    title: "Your topics",
-    desc: "Personalize your feed by topic and source. Tech, finance, politics, culture — or all of it.",
-  },
-  {
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--accent)" }}>
-        <path d="M22 3H2l8 9.46V19l4 2V12.46z" />
-      </svg>
-    ),
-    title: "No noise",
-    desc: "Every summary is distilled to what actually matters. Cut through the clickbait and get straight to the point.",
+    title: "Your topics, your feed",
+    desc: "Personalize by topic and toggle between ranked and chronological. Tech, finance, politics, culture, sports — or all of it.",
   },
 ];
 
@@ -113,14 +137,25 @@ function ArticleCard() {
       className="w-full max-w-sm rounded-2xl overflow-hidden"
       style={{ border: "1px solid var(--border)", backgroundColor: "var(--surface)" }}
     >
-      <div className="w-full h-48 flex items-center justify-center" style={{ backgroundColor: "#0a0a0a" }}>
+      <div className="w-full h-44 flex items-center justify-center" style={{ backgroundColor: "#0a0a0a" }}>
         <span className="wordmark text-2xl font-bold" style={{ color: "var(--border)" }}>tl;dr</span>
       </div>
       <div className="p-5">
-        <div className="flex items-center gap-2 mb-3">
+        {/* Meta row — with new source badge + freshness tag */}
+        <div className="flex items-center gap-2 mb-3 flex-wrap">
           <span className="text-xs px-1.5 py-0.5 rounded border font-semibold tracking-wide" style={{ color: "#34d399", borderColor: "#34d399" }}>FINANCE</span>
-          <span className="text-sm flex-1" style={{ color: "var(--text-secondary)" }}>WSJ Markets</span>
-          <span className="text-xs" style={{ color: "var(--text-muted)" }}>just now</span>
+          <span className="freshness-tag freshness-breaking">
+            <span style={{ width: 5, height: 5, borderRadius: "50%", backgroundColor: "#f87171", display: "inline-block" }} />
+            Breaking
+          </span>
+          <span className="source-badge">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg>
+            5 sources
+          </span>
+          <span className="reading-time ml-auto">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+            1 min
+          </span>
         </div>
         <h3 className="font-bold text-lg mb-3" style={{ color: "var(--text-primary)" }}>
           Fed Holds Rates Amid Market Uncertainty
