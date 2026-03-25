@@ -44,6 +44,8 @@ interface Props {
 }
 
 export function GistSkeleton({ cardHeight }: { cardHeight: number }) {
+  const showComments = cardHeight >= 640;
+  const imageH = Math.round(cardHeight * (cardHeight >= 640 ? 0.22 : cardHeight >= 520 ? 0.18 : 0.15));
   return (
     <div
       className="feed-card flex flex-col"
@@ -55,7 +57,7 @@ export function GistSkeleton({ cardHeight }: { cardHeight: number }) {
         <div className="skeleton" style={{ width: 40, height: 14 }} />
       </div>
       <div className="flex-1 flex flex-col px-5 pb-3 gap-3" style={{ flex: "7 1 0" }}>
-        <div className="skeleton w-full rounded-lg shrink-0" style={{ height: Math.round(cardHeight * 0.22) }} />
+        <div className="skeleton w-full rounded-lg shrink-0" style={{ height: imageH }} />
         <div className="skeleton skeleton-text-lg w-4/5" />
         <div className="skeleton skeleton-text-lg w-3/5" />
         <div className="flex flex-col gap-2 mt-1">
@@ -64,12 +66,12 @@ export function GistSkeleton({ cardHeight }: { cardHeight: number }) {
           <div className="skeleton skeleton-text w-4/5" />
         </div>
       </div>
-      <div className="hidden xl:block shrink-0 mx-5" style={{ height: 1, backgroundColor: "var(--border)" }} />
-      <div className="hidden xl:block px-5 pt-3 pb-2" style={{ flex: "3 1 0" }}>
+      {showComments && <div className="shrink-0 mx-5" style={{ height: 1, backgroundColor: "var(--border)" }} />}
+      {showComments && <div className="px-5 pt-3 pb-2" style={{ flex: "3 1 0" }}>
         <div className="skeleton skeleton-text w-1/3 mb-3" />
         <div className="skeleton skeleton-text w-full mb-2" />
         <div className="skeleton skeleton-text w-2/3" />
-      </div>
+      </div>}
       <div className="flex items-center justify-between px-5 py-3 shrink-0" style={{ borderTop: "1px solid var(--border)" }}>
         <div className="flex items-center gap-1.5">
           <div className="skeleton" style={{ width: 52, height: 28, borderRadius: 9999 }} />
@@ -181,7 +183,14 @@ export function Gist({ article, userId, email, username, isBookmarked = false, c
   const timeAgo = formatTimeAgo(new Date(article.publishedAt));
   const readTime = getGistReadTime();
   const freshness = getFreshnessTag(article.publishedAt, article.feedScore);
-  const imageHeight = Math.round(cardHeight * 0.24);
+
+  // Adaptive layout thresholds based on actual card height (accounts for both
+  // viewport height and header size — more reliable than CSS width breakpoints)
+  const showInlineComments = cardHeight >= 640;
+  const showMarketWidget   = cardHeight >= 520;
+  // Shrink the image on shorter cards so content below it isn't clipped
+  const imageHeight = Math.round(cardHeight * (cardHeight >= 640 ? 0.24 : cardHeight >= 520 ? 0.20 : 0.17));
+
   const bullets = article.summary.split("\n").filter(Boolean);
   const effectiveUsername = username || email?.split("@")[0] || "user";
   const visibleComments = comments.slice(0, 2);
@@ -454,8 +463,8 @@ export function Gist({ article, userId, email, username, isBookmarked = false, c
             </div>
           </div>
 
-          {/* Inline prediction market — shown when a relevant market is matched */}
-          {matchedMarket && (
+          {/* Inline prediction market — only when card is tall enough */}
+          {showMarketWidget && matchedMarket && (
             <a
               href={matchedMarket.affiliateUrl || matchedMarket.url}
               target="_blank"
@@ -544,11 +553,9 @@ export function Gist({ article, userId, email, username, isBookmarked = false, c
           </a>
         </div>
 
-        {/* Divider — hidden below xl so article content fills the full card */}
-        <div className="hidden xl:block shrink-0 mx-5" style={{ height: 1, backgroundColor: "var(--border)" }} />
-
-        {/* Comments section — hidden below xl, article content expands to fill */}
-        <div className="hidden xl:flex flex-col px-5 pt-3 pb-2 min-h-0" style={{ flex: "3 1 0" }}>
+        {/* Divider + comments — only when card is tall enough to show both */}
+        {showInlineComments && <div className="shrink-0 mx-5" style={{ height: 1, backgroundColor: "var(--border)" }} />}
+        <div className={`flex-col px-5 pt-3 pb-2 min-h-0 ${showInlineComments ? "flex" : "hidden"}`} style={{ flex: "3 1 0" }}>
 
           <div className="flex items-center justify-between mb-2 shrink-0">
             <span className="text-xs font-semibold tracking-widest" style={{ color: "var(--text-muted)" }}>
