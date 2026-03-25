@@ -23,14 +23,16 @@ export default function OnboardingCategoriesPage() {
   const router = useRouter();
   const [selected, setSelected] = useState<Set<Category>>(new Set());
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
   const [username, setUsername] = useState<string | null>(null);
 
+  // Run once on mount — don't include router in deps to avoid re-run during navigation
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (!data.session) {
-        router.replace("/sign-in");
+        window.location.href = "/sign-in";
         return;
       }
       const u = data.session.user;
@@ -38,7 +40,8 @@ export default function OnboardingCategoriesPage() {
       setEmail(u.email ?? null);
       setUsername(u.user_metadata?.username ?? null);
     });
-  }, [router]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function toggle(id: Category) {
     setSelected((prev) => {
@@ -49,19 +52,40 @@ export default function OnboardingCategoriesPage() {
   }
 
   async function handleContinue() {
-    if (!userId || !email || selected.size === 0) return;
+    if (selected.size === 0) return;
+
+    // Fetch a fresh session in case state hasn't resolved yet
+    let uid = userId;
+    let userEmail = email;
+    let userUsername = username;
+    if (!uid || !userEmail) {
+      const { data } = await supabase.auth.getSession();
+      uid = data.session?.user.id ?? null;
+      userEmail = data.session?.user.email ?? null;
+      userUsername = data.session?.user.user_metadata?.username ?? null;
+    }
+
+    if (!uid || !userEmail) {
+      setError("Session expired. Please sign in again.");
+      return;
+    }
+
     setSaving(true);
+    setError(null);
     try {
-      const effectiveUsername = username || email.split("@")[0] || "user";
+      const effectiveUsername = userUsername || userEmail.split("@")[0] || "user";
       await api.savePreferences(
-        userId, email, effectiveUsername,
+        uid, userEmail, effectiveUsername,
         Array.from(selected),
-        [] // no excluded sources on first setup
+        []
       );
-      await supabase.auth.updateUser({ data: { onboardingComplete: true } });
-      router.replace("/feed");
+      // Fire-and-forget — don't let this block navigation
+      supabase.auth.updateUser({ data: { onboardingComplete: true } }).catch(console.error);
+      // Hard redirect to avoid router race conditions
+      window.location.href = "/feed";
     } catch (err) {
       console.error("[Onboarding] save error:", err);
+      setError("Something went wrong saving your preferences. Please try again.");
       setSaving(false);
     }
   }
@@ -162,6 +186,13 @@ export default function OnboardingCategoriesPage() {
             </button>
           );
         })()}
+
+        {/* Error banner */}
+        {error && (
+          <div className="text-xs text-center px-4 py-3 rounded-xl" style={{ backgroundColor: "rgba(248,113,113,0.1)", border: "1px solid #f87171", color: "#f87171" }}>
+            {error}
+          </div>
+        )}
 
         {/* Continue button */}
         <div className="flex flex-col gap-3">
