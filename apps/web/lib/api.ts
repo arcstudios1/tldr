@@ -131,6 +131,9 @@ export const api = {
   getSources: (articleId: string): Promise<SourcesResponse> =>
     request<SourcesResponse>(`/articles/${articleId}/sources`),
 
+  getGist: (id: string): Promise<Article & { sources?: GistSource[] }> =>
+    request<Article & { sources?: GistSource[] }>(`/feed/${id}`),
+
   vote: (articleId: string, userId: string, email: string, username: string, value: 1 | -1 | 0) =>
     request<{ upvotes: number; downvotes: number; userVote: number }>(
       `/articles/${articleId}/vote`,

@@ -21,10 +21,8 @@ function formatTimeAgo(date: Date): string {
   return `${Math.floor(hours / 24)}d ago`;
 }
 
-function getReadingTime(summary: string): string {
-  const wordCount = summary.split(/\s+/).length;
-  const minutes = Math.max(1, Math.ceil(wordCount / 200));
-  return `${minutes} min`;
+function getGistReadTime(): string {
+  return "30 sec";
 }
 
 function getFreshnessTag(publishedAt: string, feedScore: number): "breaking" | "new" | null {
@@ -157,7 +155,7 @@ export function Gist({ article, userId, email, username, isBookmarked = false, c
 
   const categoryColor = CATEGORY_COLORS[article.category] ?? "#60a5fa";
   const timeAgo = formatTimeAgo(new Date(article.publishedAt));
-  const readTime = getReadingTime(article.summary);
+  const readTime = getGistReadTime();
   const freshness = getFreshnessTag(article.publishedAt, article.feedScore);
   const imageHeight = Math.round(cardHeight * 0.24);
   const bullets = article.summary.split("\n").filter(Boolean);

@@ -93,4 +93,49 @@ router.get("/", async (req: Request, res: Response) => {
   res.json({ items: normalized, nextCursor });
 });
 
+router.get("/:id", async (req: Request, res: Response) => {
+  const article = await prisma.article.findUnique({
+    where: { id: req.params.id },
+    select: {
+      id: true,
+      title: true,
+      summary: true,
+      imageUrl: true,
+      sourceUrl: true,
+      sourceName: true,
+      category: true,
+      publishedAt: true,
+      sourceCount: true,
+      importanceScore: true,
+      feedScore: true,
+      _count: { select: { comments: true } },
+      votes: { select: { value: true } },
+      sources: { select: { id: true, sourceName: true, sourceUrl: true } },
+    },
+  });
+
+  if (!article) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+
+  res.json({
+    id: article.id,
+    title: article.title,
+    summary: article.summary,
+    imageUrl: article.imageUrl ?? null,
+    sourceUrl: article.sourceUrl,
+    sourceName: article.sourceName,
+    category: article.category,
+    publishedAt: article.publishedAt,
+    sourceCount: article.sourceCount,
+    importanceScore: article.importanceScore,
+    feedScore: article.feedScore,
+    commentCount: article._count.comments,
+    upvotes: article.votes.filter((v) => v.value === 1).length,
+    downvotes: article.votes.filter((v) => v.value === -1).length,
+    sources: article.sources,
+  });
+});
+
 export default router;
