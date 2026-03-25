@@ -47,6 +47,7 @@ const CATEGORY_PILLS = [
   { label: "Finance", color: "#34d399" },
   { label: "Politics", color: "#f87171" },
   { label: "Culture", color: "#c084fc" },
+  { label: "Sports", color: "#fb923c" },
 ];
 
 export default function LandingPage() {
