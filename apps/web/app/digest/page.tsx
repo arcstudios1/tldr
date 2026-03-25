@@ -92,7 +92,7 @@ export default function DigestPage() {
             </div>
             <div>
               <h1 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
-                Morning Gists
+                Daily Gist
               </h1>
               <p className="text-sm" style={{ color: "var(--text-muted)" }}>
                 {formatDate(digest.date)}

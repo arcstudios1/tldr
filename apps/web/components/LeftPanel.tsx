@@ -152,7 +152,7 @@ export function LeftPanel({ articles, selected, onSelect }: Props) {
             <line x1="16" y1="13" x2="8" y2="13" />
             <line x1="16" y1="17" x2="8" y2="17" />
           </svg>
-          Morning Gists
+          Daily Gist
         </Link>
       </div>
 

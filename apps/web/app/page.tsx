@@ -104,7 +104,7 @@ const FEATURES: { icon: React.ReactNode; title: string; desc: string }[] = [
         <line x1="16" y1="17" x2="8" y2="17" />
       </svg>
     ),
-    title: "Morning Gists",
+    title: "Daily Gist",
     desc: "Today's most important stories, ranked and ready. One page, every morning — your briefing in under two minutes.",
   },
   {

@@ -125,7 +125,7 @@ function MorningGistsBanner({ cardHeight, onDismiss }: { cardHeight: number; onD
       </div>
       <div className="text-center px-6">
         <h2 className="text-xl font-bold mb-2" style={{ color: "var(--text-primary)" }}>
-          Morning Gists
+          Daily Gist
         </h2>
         <p className="text-sm max-w-xs mx-auto" style={{ color: "var(--text-muted)", lineHeight: 1.6 }}>
           Today&apos;s top stories, ranked by importance — your daily briefing in under two minutes.
@@ -415,7 +415,7 @@ export default function FeedPage() {
               href="/digest"
               className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
               style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)", color: "var(--text-muted)" }}
-              title="Morning Gists"
+              title="Daily Gist"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
