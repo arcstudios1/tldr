@@ -45,8 +45,10 @@ router.put("/:userId/preferences", async (req: Request, res: Response) => {
 
     res.json(prefs);
   } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    const code = (err as { code?: string })?.code;
     console.error("[Preferences] PUT error:", err);
-    res.status(500).json({ error: "Failed to save preferences" });
+    res.status(500).json({ error: "Failed to save preferences", detail: message, code });
   }
 });
 

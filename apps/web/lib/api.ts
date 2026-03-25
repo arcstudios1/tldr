@@ -44,7 +44,16 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     headers: { "Content-Type": "application/json" },
     ...options,
   });
-  if (!res.ok) throw new Error(`API error ${res.status}`);
+  if (!res.ok) {
+    let detail = "";
+    try {
+      const body = await res.json();
+      detail = body?.detail || body?.error || "";
+    } catch { /* ignore */ }
+    const err = new Error(`API error ${res.status}${detail ? `: ${detail}` : ""}`) as Error & { detail?: string };
+    err.detail = detail;
+    throw err;
+  }
   return res.json() as Promise<T>;
 }
 

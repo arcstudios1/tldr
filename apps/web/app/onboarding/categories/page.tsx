@@ -85,7 +85,9 @@ export default function OnboardingCategoriesPage() {
       window.location.href = "/feed";
     } catch (err) {
       console.error("[Onboarding] save error:", err);
-      setError("Something went wrong saving your preferences. Please try again.");
+      const detail = (err as { detail?: string })?.detail;
+      const message = (err as Error)?.message ?? "";
+      setError(`Failed to save: ${detail || message || "unknown error"}`);
       setSaving(false);
     }
   }
