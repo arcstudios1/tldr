@@ -4,7 +4,7 @@ import { RawArticle } from "./rss";
 const API_KEY = process.env.GUARDIAN_API_KEY ?? "";
 const BASE = "https://content.guardianapis.com";
 const MAX_AGE_MS = 24 * 60 * 60 * 1000;
-const MAX_PER_SECTION = 8;
+const MAX_PER_SECTION = 12;
 
 interface GuardianResult {
   id: string;
@@ -65,7 +65,6 @@ async function fetchSection(
     if (now - pubDate.getTime() > MAX_AGE_MS) continue;
 
     const imageUrl = item.fields?.thumbnail;
-    if (!imageUrl) continue;
 
     const content =
       item.fields?.trailText ??

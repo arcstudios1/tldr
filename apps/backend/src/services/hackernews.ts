@@ -4,8 +4,8 @@ import { RawArticle } from "./rss";
 const HN_TOP_URL = "https://hacker-news.firebaseio.com/v0/topstories.json";
 const HN_ITEM_URL = (id: number) => `https://hacker-news.firebaseio.com/v0/item/${id}.json`;
 
-const FETCH_TOP_N = 40;   // fetch details for top 40 ranked stories
-const MAX_ARTICLES = 15;  // keep best 15 that have images
+const FETCH_TOP_N = 50;
+const MAX_ARTICLES = 30;
 const MIN_SCORE = 50;
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
 
@@ -60,41 +60,6 @@ function domainToSourceName(url: string): string {
   }
 }
 
-async function fetchOgImage(url: string): Promise<string | undefined> {
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
-    const res = await fetch(url, {
-      signal: controller.signal,
-      headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; tldr-bot/1.0)",
-        "Accept": "text/html,application/xhtml+xml",
-      },
-    });
-    clearTimeout(timeoutId);
-    if (!res.ok) return undefined;
-    // Read only first 100KB to find og:image in <head>
-    const reader = res.body?.getReader();
-    if (!reader) return undefined;
-    let html = "";
-    while (html.length < 100_000) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      html += new TextDecoder().decode(value);
-      if (html.includes("</head>")) break;
-    }
-    reader.cancel().catch(() => {});
-    const match =
-      html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i) ||
-      html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i) ||
-      html.match(/<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i) ||
-      html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+name=["']twitter:image["']/i);
-    return match?.[1];
-  } catch {
-    return undefined;
-  }
-}
-
 export async function fetchHackerNews(): Promise<RawArticle[]> {
   try {
     const res = await fetch(HN_TOP_URL);
@@ -126,31 +91,15 @@ export async function fetchHackerNews(): Promise<RawArticle[]> {
       )
       .sort((a, b) => b.score - a.score);
 
-    // Fetch OG images in batches of 5
-    const articles: RawArticle[] = [];
-    const BATCH = 5;
-    for (let i = 0; i < candidates.length && articles.length < MAX_ARTICLES; i += BATCH) {
-      const batch = candidates.slice(i, i + BATCH);
-      const results = await Promise.all(
-        batch.map(async (item) => {
-          const imageUrl = await fetchOgImage(item.url!);
-          if (!imageUrl) return null;
-          return {
-            title: item.title,
-            sourceUrl: item.url!,
-            sourceName: domainToSourceName(item.url!),
-            category: "TECH" as Category,
-            content: item.title,
-            publishedAt: new Date(item.time * 1000),
-            imageUrl,
-            importanceScore: scoreToImportance(item.score),
-          } as RawArticle;
-        })
-      );
-      for (const r of results) {
-        if (r && articles.length < MAX_ARTICLES) articles.push(r);
-      }
-    }
+    const articles: RawArticle[] = candidates.slice(0, MAX_ARTICLES).map((item) => ({
+      title: item.title,
+      sourceUrl: item.url!,
+      sourceName: domainToSourceName(item.url!),
+      category: "TECH" as Category,
+      content: item.title,
+      publishedAt: new Date(item.time * 1000),
+      importanceScore: scoreToImportance(item.score),
+    }));
 
     console.log(
       `[HackerNews] ${articles.length} articles (top score: ${candidates[0]?.score ?? 0})`

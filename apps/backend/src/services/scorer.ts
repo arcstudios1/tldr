@@ -1,10 +1,20 @@
 import { prisma } from "../db/client";
+import { Category } from "@prisma/client";
+
+const CATEGORY_WEIGHT: Record<Category, number> = {
+  POLITICS: 1.4,
+  FINANCE:  1.2,
+  TECH:     1.2,
+  SPORTS:   1.0,
+  CULTURE:  0.9,
+};
 
 /**
  * Feed ranking formula (HN-style with multi-signal numerator):
  *
- *   feedScore = (importanceBase + sourceBoost) / timeDecay
+ *   feedScore = categoryWeight * (importanceBase + sourceBoost) / timeDecay
  *
+ *   categoryWeight = per-category multiplier (Politics > Finance=Tech > Sports > Culture)
  *   importanceBase = importanceScore * 1.5
  *   sourceBoost    = log2(sourceCount + 1) * 2
  *   timeDecay      = (hoursOld + 2) ^ 1.5
@@ -21,6 +31,7 @@ function calcFeedScore(params: {
   importanceScore: number;
   sourceCount: number;
   publishedAt: Date;
+  category: Category;
   // Platform engagement — re-enable when user base justifies it
   // upvotes: number;
   // downvotes: number;
@@ -32,6 +43,7 @@ function calcFeedScore(params: {
 
   const importanceBase = params.importanceScore * 1.5;
   const sourceBoost = Math.log2(params.sourceCount + 1) * 2;
+  const catWeight = CATEGORY_WEIGHT[params.category] ?? 1.0;
 
   // ── Uncomment when platform engagement is meaningful ─────────────────
   // const platformEngagement =
@@ -43,7 +55,7 @@ function calcFeedScore(params: {
   const numerator = importanceBase + sourceBoost; // + platformEngagement
   const timeDecay = Math.pow(hoursOld + 2, 1.5);
 
-  return numerator / timeDecay;
+  return catWeight * (numerator / timeDecay);
 }
 
 /**
@@ -60,6 +72,7 @@ export async function updateFeedScores(): Promise<void> {
       importanceScore: true,
       sourceCount: true,
       publishedAt: true,
+      category: true,
       // Re-enable with engagement signals:
       // _count: { select: { votes: true, comments: true, bookmarks: true } },
       // votes: { select: { value: true } },
@@ -73,6 +86,7 @@ export async function updateFeedScores(): Promise<void> {
       importanceScore: a.importanceScore,
       sourceCount: a.sourceCount,
       publishedAt: a.publishedAt,
+      category: a.category,
     });
     return prisma.article.update({
       where: { id: a.id },

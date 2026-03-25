@@ -4,7 +4,7 @@ import { RawArticle } from "./rss";
 const API_KEY = process.env.GNEWS_API_KEY ?? "";
 const BASE = "https://gnews.io/api/v4";
 const MAX_AGE_MS = 24 * 60 * 60 * 1000;
-const MAX_PER_TOPIC = 5;
+const MAX_PER_TOPIC = 8;
 
 interface GNewsArticle {
   title: string;
@@ -50,7 +50,7 @@ async function fetchTopic(
 
   for (const item of json.articles) {
     if (articles.length >= MAX_PER_TOPIC) break;
-    if (!item.url || !item.image) continue;
+    if (!item.url) continue;
 
     const pubDate = new Date(item.publishedAt);
     if (now - pubDate.getTime() > MAX_AGE_MS) continue;

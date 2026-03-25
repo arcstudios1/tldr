@@ -8,6 +8,7 @@ const CATEGORY_CONFIG: { value: Category; label: string; color: string }[] = [
   { value: "FINANCE", label: "Finance", color: "#34d399" },
   { value: "POLITICS", label: "Politics", color: "#f87171" },
   { value: "CULTURE", label: "Culture", color: "#c084fc" },
+  { value: "SPORTS", label: "Sports", color: "#fb923c" },
 ];
 
 function formatLastUpdated(date: Date): string {

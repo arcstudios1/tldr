@@ -8,6 +8,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   FINANCE: "#34d399",
   POLITICS: "#f87171",
   CULTURE: "#c084fc",
+  SPORTS: "#fb923c",
 };
 
 function timeAgo(date: Date): string {

@@ -3,7 +3,7 @@ import { RawArticle } from "./rss";
 
 const API_KEY = process.env.NYT_API_KEY ?? "";
 const MAX_AGE_MS = 24 * 60 * 60 * 1000;
-const MAX_PER_SECTION = 8;
+const MAX_PER_SECTION = 12;
 
 interface NYTArticle {
   web_url: string;
@@ -71,8 +71,6 @@ async function fetchTopStories(
         ? image
         : `https://www.nytimes.com/${image}`
       : undefined;
-
-    if (!imageUrl) continue;
 
     articles.push({
       title: item.title,

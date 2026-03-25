@@ -2,7 +2,7 @@ import { prisma } from "../db/client";
 
 const TIMEOUT_MS = 6_000;
 const CONCURRENT = 5;
-const MAX_PER_RUN = 40;
+const MAX_PER_RUN = 80;
 const BATCH_DELAY_MS = 250;
 
 async function fetchOgImage(sourceUrl: string): Promise<string | null> {

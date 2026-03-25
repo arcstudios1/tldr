@@ -51,14 +51,14 @@ const RSS_FEEDS: { url: string; sourceName: string; category: Category }[] = [
   { url: "https://sports.yahoo.com/rss/",                              sourceName: "Yahoo Sports",       category: "SPORTS"   },
   { url: "https://feeds.bbci.co.uk/sport/rss.xml",                     sourceName: "BBC Sport",          category: "SPORTS"   },
   { url: "https://www.cbssports.com/rss/headlines/",                   sourceName: "CBS Sports",         category: "SPORTS"   },
-  // Culture — re-enable once feed balance is better
-  // { url: "https://variety.com/feed/",                               sourceName: "Variety",            category: "CULTURE"  },
-  // { url: "https://www.hollywoodreporter.com/feed/",                 sourceName: "The Hollywood Reporter", category: "CULTURE" },
-  // { url: "https://pitchfork.com/feed/feed-news/rss",               sourceName: "Pitchfork",          category: "CULTURE"  },
+  // Culture
+  { url: "https://variety.com/feed/",                                  sourceName: "Variety",            category: "CULTURE"  },
+  { url: "https://www.hollywoodreporter.com/feed/",                    sourceName: "The Hollywood Reporter", category: "CULTURE" },
+  { url: "https://pitchfork.com/feed/feed-news/rss",                  sourceName: "Pitchfork",          category: "CULTURE"  },
 ];
 
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
-const MAX_ARTICLES_PER_FEED = 5;
+const MAX_ARTICLES_PER_FEED = 8;
 
 function extractImageUrl(item: CustomItem): string | undefined {
   if (item.enclosure?.url && item.enclosure.type?.startsWith("image/")) {
