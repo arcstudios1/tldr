@@ -47,8 +47,7 @@ router.get("/", async (req: Request, res: Response) => {
         : {}),
     },
     orderBy: [
-      { importanceScore: "desc" },
-      { sourceCount: "desc" },
+      { feedScore: "desc" },
       { publishedAt: "desc" },
     ],
     take: limit + 1,

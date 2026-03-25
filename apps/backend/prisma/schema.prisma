@@ -43,6 +43,7 @@ model Article {
   isAd            Boolean   @default(false)
   sourceCount     Int       @default(1)
   importanceScore Int       @default(5)
+  feedScore       Float     @default(0)
   votes           Vote[]
   comments        Comment[]
   bookmarks       Bookmark[]

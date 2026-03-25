@@ -2,7 +2,11 @@ import cron from "node-cron";
 import { prisma } from "../db/client";
 import { fetchAllFeeds, RawArticle } from "./rss";
 import { fetchHackerNews } from "./hackernews";
+import { fetchGuardian } from "./guardian";
+import { fetchNYTimes } from "./nytimes";
+import { fetchGNews } from "./gnews";
 import { summarizeArticle } from "./summarizer";
+import { updateFeedScores } from "./scorer";
 
 const STOP_WORDS = new Set([
   "a", "an", "the", "in", "on", "at", "to", "for", "of", "and", "or", "but",
@@ -29,12 +33,9 @@ function titlesAreSimilar(a: string, b: string): boolean {
   for (const word of kwA) {
     if (kwB.has(word)) shared++;
   }
-  // 2+ shared meaningful keywords = same story
   return shared >= 2;
 }
 
-// Group articles by topic, return one representative per group
-// sorted by how many sources covered that story (descending)
 function groupByTopic(
   articles: RawArticle[]
 ): Array<{ article: RawArticle; sourceCount: number }> {
@@ -56,29 +57,43 @@ function groupByTopic(
 
   return groups
     .map((g) => ({
-      article: g.articles[0], // first = highest-position article (feed order)
+      article: g.articles[0],
       sourceCount: g.articles.length,
     }))
-    .sort((a, b) => b.sourceCount - a.sourceCount); // multi-source stories first
+    .sort((a, b) => b.sourceCount - a.sourceCount);
 }
 
 export async function runPipeline(): Promise<void> {
   console.log("[Pipeline] Starting content pipeline run...");
-  const [rssArticles, hnArticles] = await Promise.all([
-    fetchAllFeeds(),
-    fetchHackerNews(),
-  ]);
-  const rawArticles = [...hnArticles, ...rssArticles];
+
+  const [rssArticles, hnArticles, guardianArticles, nytArticles, gnewsArticles] =
+    await Promise.all([
+      fetchAllFeeds(),
+      fetchHackerNews(),
+      fetchGuardian(),
+      fetchNYTimes(),
+      fetchGNews(),
+    ]);
+
+  const rawArticles = [
+    ...hnArticles,
+    ...nytArticles,
+    ...guardianArticles,
+    ...gnewsArticles,
+    ...rssArticles,
+  ];
+
   console.log(
     `[Pipeline] Fetched ${rawArticles.length} raw articles ` +
-    `(${hnArticles.length} HackerNews, ${rssArticles.length} RSS)`
+    `(HN: ${hnArticles.length}, NYT: ${nytArticles.length}, ` +
+    `Guardian: ${guardianArticles.length}, GNews: ${gnewsArticles.length}, ` +
+    `RSS: ${rssArticles.length})`
   );
 
-  // Group by topic and surface multi-source stories first
   const grouped = groupByTopic(rawArticles);
   console.log(
-    `[Pipeline] ${grouped.length} unique stories (` +
-    `${grouped.filter((g) => g.sourceCount > 1).length} covered by multiple sources)`
+    `[Pipeline] ${grouped.length} unique stories ` +
+    `(${grouped.filter((g) => g.sourceCount > 1).length} multi-source)`
   );
 
   let created = 0;
@@ -91,15 +106,8 @@ export async function runPipeline(): Promise<void> {
         where: { sourceUrl: article.sourceUrl },
       });
 
-      if (existing) {
-        skipped++;
-        continue;
-      }
-
-      if (!article.imageUrl) {
-        skipped++;
-        continue;
-      }
+      if (existing) { skipped++; continue; }
+      if (!article.imageUrl) { skipped++; continue; }
 
       const { headline, summary } = await summarizeArticle(
         article.title,
@@ -117,17 +125,16 @@ export async function runPipeline(): Promise<void> {
           publishedAt: article.publishedAt,
           sourceCount,
           importanceScore: article.importanceScore ?? 5,
+          feedScore: 0, // scorer will populate within 30 minutes
         },
       });
 
       created++;
       if (sourceCount > 1) {
-        console.log(
-          `[Pipeline] ★ Multi-source story (${sourceCount} sources): "${headline}"`
-        );
+        console.log(`[Pipeline] ★ Multi-source (${sourceCount}): "${headline}"`);
       }
     } catch (err) {
-      console.error(`[Pipeline] Failed to process "${article.title}":`, err);
+      console.error(`[Pipeline] Failed: "${article.title}":`, err);
       failed++;
     }
   }
@@ -135,23 +142,36 @@ export async function runPipeline(): Promise<void> {
   console.log(
     `[Pipeline] Done. Created: ${created}, Skipped: ${skipped}, Failed: ${failed}`
   );
+
+  // Run scorer immediately after ingestion so new articles have a score
+  await updateFeedScores().catch((err) =>
+    console.error("[Pipeline] Scorer error:", err)
+  );
 }
 
 export function startScheduler(): void {
-  // Run every hour
+  // Content pipeline: every hour
   cron.schedule("0 * * * *", () => {
     runPipeline().catch((err) =>
-      console.error("[Scheduler] Cron pipeline error:", err)
+      console.error("[Scheduler] Pipeline error:", err)
     );
   });
 
-  // Delay the initial run by 15s so the server is fully up before we
-  // hit 12 RSS feeds and strain Railway's memory
+  // Feed scorer: every 30 minutes (keeps scores fresh as time decays)
+  cron.schedule("*/30 * * * *", () => {
+    updateFeedScores().catch((err) =>
+      console.error("[Scheduler] Scorer error:", err)
+    );
+  });
+
+  // Startup run after 15s (server warm-up buffer)
   setTimeout(() => {
     runPipeline().catch((err) =>
       console.error("[Scheduler] Startup pipeline error:", err)
     );
   }, 15_000);
 
-  console.log("[Scheduler] Pipeline scheduled every hour (first run in 15s)");
+  console.log(
+    "[Scheduler] Pipeline: hourly | Scorer: every 30 min | First run in 15s"
+  );
 }
