@@ -62,7 +62,7 @@ async function fetchTopic(
       category: config.category,
       content: item.description ?? item.content ?? item.title,
       publishedAt: pubDate,
-      imageUrl: item.image,
+      imageUrl: item.image ?? undefined,
       importanceScore: 5,
     });
   }
