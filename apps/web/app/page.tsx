@@ -1,23 +1,42 @@
 "use client";
 
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
-const FEATURES = [
+const FEATURES: { icon: React.ReactNode; title: string; desc: string }[] = [
   {
-    icon: "⚡",
-    title: "9-second reads",
+    icon: (
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--accent)" }}>
+        <line x1="3" y1="5" x2="21" y2="5" />
+        <line x1="3" y1="11" x2="16" y2="11" />
+        <line x1="3" y1="17" x2="10" y2="17" />
+      </svg>
+    ),
+    title: "The short version",
     desc: "Every story distilled to its essential points. No fluff, no filler — just what you need to know.",
   },
   {
-    icon: "🎯",
+    icon: (
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--accent)" }}>
+        <line x1="4" y1="6" x2="20" y2="6" />
+        <circle cx="9" cy="6" r="2.5" fill="var(--bg)" stroke="currentColor" strokeWidth="1.75" />
+        <line x1="4" y1="12" x2="20" y2="12" />
+        <circle cx="15" cy="12" r="2.5" fill="var(--bg)" stroke="currentColor" strokeWidth="1.75" />
+        <line x1="4" y1="18" x2="20" y2="18" />
+        <circle cx="10" cy="18" r="2.5" fill="var(--bg)" stroke="currentColor" strokeWidth="1.75" />
+      </svg>
+    ),
     title: "Your topics",
     desc: "Personalize your feed by topic and source. Tech, finance, politics, culture — or all of it.",
   },
   {
-    icon: "🔇",
+    icon: (
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--accent)" }}>
+        <path d="M22 3H2l8 9.46V19l4 2V12.46z" />
+      </svg>
+    ),
     title: "No noise",
     desc: "Every summary is distilled to what actually matters. Cut through the clickbait and get straight to the point.",
   },
@@ -150,7 +169,10 @@ export default function LandingPage() {
                 <span className="px-3 py-1 rounded-full text-xs" style={{ backgroundColor: "var(--bg)", border: "1px solid var(--border)", color: "var(--text-muted)" }}>↑ 24</span>
                 <span className="px-3 py-1 rounded-full text-xs" style={{ backgroundColor: "var(--bg)", border: "1px solid var(--border)", color: "var(--text-muted)" }}>↓ 3</span>
               </div>
-              <span className="px-3 py-1 rounded-full text-xs" style={{ backgroundColor: "var(--bg)", border: "1px solid var(--border)", color: "var(--text-muted)" }}>💬 8</span>
+              <span className="px-3 py-1 rounded-full text-xs flex items-center gap-1" style={{ backgroundColor: "var(--bg)", border: "1px solid var(--border)", color: "var(--text-muted)" }}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                8
+              </span>
             </div>
           </div>
         </div>
