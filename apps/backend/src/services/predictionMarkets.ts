@@ -63,7 +63,7 @@ async function fetchPolymarket(): Promise<void> {
       return;
     }
 
-    const events: PolymarketEvent[] = await res.json();
+    const events = (await res.json()) as PolymarketEvent[];
 
     for (const event of events) {
       for (const market of event.markets) {
@@ -120,7 +120,7 @@ async function fetchKalshi(): Promise<void> {
       return;
     }
 
-    const data = await res.json();
+    const data = (await res.json()) as { markets?: KalshiMarket[] };
     const markets: KalshiMarket[] = data.markets ?? [];
 
     for (const market of markets) {
