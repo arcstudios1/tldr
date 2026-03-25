@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Article, Comment, GistSource, api } from "@/lib/api";
+import { Article, Comment, GistSource, PredictionMarket, api } from "@/lib/api";
 
 const CATEGORY_COLORS: Record<string, string> = {
   TECH: "#60a5fa",
@@ -100,6 +100,8 @@ export function Gist({ article, userId, email, username, isBookmarked = false, c
   const [postError, setPostError] = useState(false);
   const [localCommentCount, setLocalCommentCount] = useState(article.commentCount);
 
+  const [matchedMarket, setMatchedMarket] = useState<PredictionMarket | null | undefined>(undefined);
+
   const [sourcesOpen, setSourcesOpen] = useState(false);
   const [sourcesData, setSourcesData] = useState<GistSource[]>([]);
   const [sourcesLoading, setSourcesLoading] = useState(false);
@@ -123,12 +125,34 @@ export function Gist({ article, userId, email, username, isBookmarked = false, c
     setSourcesOpen(false);
     setSourcesData([]);
     setShareMenuOpen(false);
+    setMatchedMarket(undefined);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [article.id]);
 
   useEffect(() => {
     setLocalBookmark(isBookmarked);
   }, [isBookmarked]);
+
+  // Fetch matched prediction market lazily on first visibility
+  useEffect(() => {
+    if (matchedMarket !== undefined) return;
+    const el = cardRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          api.getMarketForArticle(article.id)
+            .then((res) => setMatchedMarket(res.market ?? null))
+            .catch(() => setMatchedMarket(null));
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.2 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [article.id, matchedMarket]);
 
   useEffect(() => {
     if (commentsFetched) return;
@@ -429,6 +453,85 @@ export function Gist({ article, userId, email, username, isBookmarked = false, c
               ))}
             </div>
           </div>
+
+          {/* Inline prediction market — shown when a relevant market is matched */}
+          {matchedMarket && (
+            <a
+              href={matchedMarket.affiliateUrl || matchedMarket.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0 flex flex-col gap-2 px-3 py-2.5 rounded-xl transition-opacity hover:opacity-90"
+              style={{
+                backgroundColor: "var(--surface)",
+                border: "1px solid var(--border)",
+                textDecoration: "none",
+              }}
+            >
+              {/* Header row */}
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <div
+                    className="w-4 h-4 rounded flex items-center justify-center shrink-0 text-xs font-black"
+                    style={{ backgroundColor: "#5B48F2", color: "#fff", fontSize: 8, lineHeight: 1 }}
+                  >
+                    P
+                  </div>
+                  <span className="text-xs font-semibold tracking-wide" style={{ color: "var(--text-muted)" }}>
+                    PREDICTION MARKET
+                  </span>
+                </div>
+                <span
+                  className="text-xs font-bold tabular-nums shrink-0"
+                  style={{
+                    color: matchedMarket.yesPrice >= 0.65
+                      ? "#34d399"
+                      : matchedMarket.yesPrice <= 0.35
+                      ? "#f87171"
+                      : "var(--text-primary)",
+                  }}
+                >
+                  {Math.round(matchedMarket.yesPrice * 100)}% YES
+                </span>
+              </div>
+
+              {/* Question */}
+              <p
+                className="text-sm font-medium leading-snug line-clamp-2"
+                style={{ color: "var(--text-primary)" }}
+              >
+                {matchedMarket.question}
+              </p>
+
+              {/* Probability bar */}
+              <div className="w-full rounded-full overflow-hidden" style={{ height: 4, backgroundColor: "var(--border)" }}>
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{
+                    width: `${Math.round(matchedMarket.yesPrice * 100)}%`,
+                    backgroundColor: matchedMarket.yesPrice >= 0.65
+                      ? "#34d399"
+                      : matchedMarket.yesPrice <= 0.35
+                      ? "#f87171"
+                      : "#c8f65d",
+                  }}
+                />
+              </div>
+
+              {/* Footer */}
+              <div className="flex items-center justify-between">
+                <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+                  {matchedMarket.volume >= 1_000_000
+                    ? `$${(matchedMarket.volume / 1_000_000).toFixed(1)}M vol`
+                    : matchedMarket.volume >= 1_000
+                    ? `$${(matchedMarket.volume / 1_000).toFixed(0)}K vol`
+                    : "polymarket.com"}
+                </span>
+                <span className="text-xs" style={{ color: "var(--accent)" }}>
+                  Trade on Polymarket →
+                </span>
+              </div>
+            </a>
+          )}
 
           <a
             href={article.sourceUrl}

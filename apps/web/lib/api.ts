@@ -216,6 +216,9 @@ export const api = {
     return request<MarketsResponse>(path);
   },
 
+  getMarketForArticle: (articleId: string): Promise<{ market: PredictionMarket | null; matchType?: string }> =>
+    request<{ market: PredictionMarket | null; matchType?: string }>(`/markets/for-article/${articleId}`),
+
   getReferral: (userId: string): Promise<ReferralInfo> =>
     request<ReferralInfo>(`/users/${userId}/referral`),
 
