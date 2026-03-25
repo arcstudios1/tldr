@@ -6,6 +6,8 @@ interface PolymarketEvent {
   title: string;
   slug: string;
   image: string;
+  volume: number;
+  endDate: string;
   markets: {
     id: string;
     question: string;
@@ -54,7 +56,7 @@ function classifyMarket(question: string): Category {
 async function fetchPolymarket(): Promise<void> {
   try {
     const res = await fetch(
-      "https://gamma-api.polymarket.com/events?closed=false&limit=25&active=true&order=volume",
+      "https://gamma-api.polymarket.com/events?closed=false&limit=30&active=true&order=volume&ascending=false",
       { headers: { "User-Agent": "gists-bot/1.0" } }
     );
 
@@ -65,9 +67,49 @@ async function fetchPolymarket(): Promise<void> {
 
     const events = (await res.json()) as PolymarketEvent[];
 
+    // For multi-outcome events (e.g. "2028 Presidential Nominee"), use the event
+    // as a single market entry rather than iterating each outcome individually.
     for (const event of events) {
-      for (const market of event.markets) {
-        if (!market.active) continue;
+      const hasMultipleMarkets = event.markets.length > 1;
+
+      if (hasMultipleMarkets) {
+        // Represent the whole event as one market — use event-level volume
+        const externalId = `poly_event_${event.id}`;
+        const category = classifyMarket(event.title);
+        const eventVolume = event.volume || 0;
+
+        // Find the leading outcome (highest yes price)
+        let leadPrice = 0.5;
+        let leadQuestion = event.title;
+        for (const m of event.markets) {
+          try {
+            const prices = JSON.parse(m.outcomePrices);
+            const p = parseFloat(prices[0]) || 0;
+            if (p > leadPrice) { leadPrice = p; leadQuestion = m.question; }
+          } catch { /* keep default */ }
+        }
+
+        await prisma.predictionMarket.upsert({
+          where: { externalId },
+          create: {
+            externalId,
+            platform: "polymarket",
+            question: event.title,
+            category,
+            yesPrice: leadPrice,
+            volume: eventVolume,
+            url: `https://polymarket.com/event/${event.slug}`,
+            affiliateUrl: `https://polymarket.com/event/${event.slug}`,
+            imageUrl: event.image || null,
+            endDate: event.endDate ? new Date(event.endDate) : null,
+            lastUpdated: new Date(),
+          },
+          update: { yesPrice: leadPrice, volume: eventVolume, lastUpdated: new Date() },
+        });
+      } else {
+        // Single binary market — store as-is
+        const market = event.markets[0];
+        if (!market || !market.active) continue;
 
         let yesPrice = 0.5;
         try {
@@ -75,29 +117,26 @@ async function fetchPolymarket(): Promise<void> {
           yesPrice = parseFloat(prices[0]) || 0.5;
         } catch { /* default */ }
 
-        const category = classifyMarket(market.question || event.title);
+        const category = classifyMarket(event.title);
         const externalId = `poly_${market.id}`;
+        const eventVolume = event.volume || market.volume || 0;
 
         await prisma.predictionMarket.upsert({
           where: { externalId },
           create: {
             externalId,
             platform: "polymarket",
-            question: market.question || event.title,
+            question: event.title,
             category,
             yesPrice,
-            volume: market.volume || 0,
+            volume: eventVolume,
             url: `https://polymarket.com/event/${event.slug}`,
             affiliateUrl: `https://polymarket.com/event/${event.slug}`,
             imageUrl: event.image || null,
             endDate: market.endDate ? new Date(market.endDate) : null,
             lastUpdated: new Date(),
           },
-          update: {
-            yesPrice,
-            volume: market.volume || 0,
-            lastUpdated: new Date(),
-          },
+          update: { yesPrice, volume: eventVolume, lastUpdated: new Date() },
         });
       }
     }
@@ -109,52 +148,9 @@ async function fetchPolymarket(): Promise<void> {
 }
 
 async function fetchKalshi(): Promise<void> {
-  try {
-    const res = await fetch(
-      "https://api.elections.kalshi.com/trade-api/v2/markets?limit=25&status=open",
-      { headers: { "User-Agent": "gists-bot/1.0", Accept: "application/json" } }
-    );
-
-    if (!res.ok) {
-      console.warn(`[PredictionMarkets] Kalshi responded ${res.status}`);
-      return;
-    }
-
-    const data = (await res.json()) as { markets?: KalshiMarket[] };
-    const markets: KalshiMarket[] = data.markets ?? [];
-
-    for (const market of markets) {
-      if (market.status !== "open") continue;
-
-      const category = classifyMarket(market.title);
-      const externalId = `kalshi_${market.ticker}`;
-
-      await prisma.predictionMarket.upsert({
-        where: { externalId },
-        create: {
-          externalId,
-          platform: "kalshi",
-          question: market.title,
-          category,
-          yesPrice: market.yes_ask ?? 0.5,
-          volume: market.volume ?? 0,
-          url: `https://kalshi.com/markets/${market.ticker}`,
-          affiliateUrl: `https://kalshi.com/markets/${market.ticker}`,
-          endDate: market.close_time ? new Date(market.close_time) : null,
-          lastUpdated: new Date(),
-        },
-        update: {
-          yesPrice: market.yes_ask ?? 0.5,
-          volume: market.volume ?? 0,
-          lastUpdated: new Date(),
-        },
-      });
-    }
-
-    console.log(`[PredictionMarkets] Kalshi: synced ${markets.length} markets`);
-  } catch (err) {
-    console.error("[PredictionMarkets] Kalshi fetch failed:", err);
-  }
+  // Kalshi's public read API requires authentication as of 2024.
+  // Skip silently — Polymarket alone covers all categories well.
+  console.log("[PredictionMarkets] Kalshi: skipped (auth required for public API)");
 }
 
 export async function syncPredictionMarkets(): Promise<void> {

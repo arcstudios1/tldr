@@ -30,6 +30,14 @@ app.post("/admin/run-pipeline", async (_req, res) => {
   runPipeline().catch(console.error);
 });
 
+// Manual markets sync trigger
+app.post("/admin/run-markets", async (_req, res) => {
+  res.json({ message: "Markets sync started" });
+  import("./services/predictionMarkets").then(({ syncPredictionMarkets }) =>
+    syncPredictionMarkets().catch(console.error)
+  );
+});
+
 app.use("/feed", feedLimiter, feedRouter);
 app.use("/search", feedLimiter, searchRouter);
 app.use("/digest", feedLimiter, digestRouter);
