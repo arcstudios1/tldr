@@ -115,20 +115,6 @@ export default function FeedPage() {
     setReadIds(getReadArticles());
   }, []);
 
-  // Mark active article as read after 1.5s of viewing
-  useEffect(() => {
-    const item = feedItems[activeCardIndex];
-    if (!item || "type" in item) return;
-    const articleId = (item as Article).id;
-    if (readIds.has(articleId)) return;
-    const timer = setTimeout(() => {
-      markAsRead(articleId);
-      setReadIds((prev) => new Set(prev).add(articleId));
-    }, 1500);
-    return () => clearTimeout(timer);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeCardIndex, feedItems]);
-
   // Auth
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setUser(data.session?.user ?? null));
@@ -191,6 +177,20 @@ export default function FeedPage() {
   }, [selectedTab, user, feedSort]);
 
   const feedItems: FeedItem[] = isSavedView ? bookmarks : injectAds(articles);
+
+  // Mark active article as read after 1.5s of viewing — must be after feedItems declaration
+  useEffect(() => {
+    const item = feedItems[activeCardIndex];
+    if (!item || "type" in item) return;
+    const articleId = (item as Article).id;
+    if (readIds.has(articleId)) return;
+    const timer = setTimeout(() => {
+      markAsRead(articleId);
+      setReadIds((prev) => new Set(prev).add(articleId));
+    }, 1500);
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeCardIndex, feedItems]);
 
   const trendingArticles = useMemo(
     () =>

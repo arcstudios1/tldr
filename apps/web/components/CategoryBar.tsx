@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { Category, FeedSort } from "@/lib/api";
 
 export type TabValue = Category | "SAVED" | null;
