@@ -475,19 +475,20 @@ export function Gist({ article, userId, email, username, isBookmarked = false, o
                 textDecoration: "none",
               }}
             >
-              {/* Header row */}
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <div
-                    className="w-4 h-4 rounded flex items-center justify-center shrink-0 text-xs font-black"
-                    style={{ backgroundColor: "#5B48F2", color: "#fff", fontSize: 8, lineHeight: 1 }}
-                  >
-                    P
-                  </div>
-                  <span className="text-xs font-semibold tracking-wide" style={{ color: "var(--text-muted)" }}>
-                    PREDICTION MARKET
-                  </span>
+              {/* Header row: platform icon + market name + probability */}
+              <div className="flex items-center gap-1.5 min-w-0">
+                <div
+                  className="w-4 h-4 rounded flex items-center justify-center shrink-0 text-xs font-black"
+                  style={{ backgroundColor: "#5B48F2", color: "#fff", fontSize: 8, lineHeight: 1 }}
+                >
+                  P
                 </div>
+                <span
+                  className="text-sm font-medium leading-snug flex-1 min-w-0 truncate"
+                  style={{ color: "var(--text-primary)" }}
+                >
+                  {matchedMarket.question}
+                </span>
                 <span
                   className="text-xs font-bold tabular-nums shrink-0"
                   style={{
@@ -498,17 +499,9 @@ export function Gist({ article, userId, email, username, isBookmarked = false, o
                       : "var(--text-primary)",
                   }}
                 >
-                  {Math.round(matchedMarket.yesPrice * 100)}% YES
+                  {Math.round(matchedMarket.yesPrice * 100)}%
                 </span>
               </div>
-
-              {/* Question */}
-              <p
-                className="text-sm font-medium leading-snug line-clamp-2"
-                style={{ color: "var(--text-primary)" }}
-              >
-                {matchedMarket.question}
-              </p>
 
               {/* Probability bar */}
               <div className="w-full rounded-full overflow-hidden" style={{ height: 4, backgroundColor: "var(--border)" }}>

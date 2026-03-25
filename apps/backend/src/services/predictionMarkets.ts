@@ -73,21 +73,20 @@ async function fetchPolymarket(): Promise<void> {
       const hasMultipleMarkets = event.markets.length > 1;
 
       if (hasMultipleMarkets) {
-        // Represent the whole event as one market — use event-level volume
         const externalId = `poly_event_${event.id}`;
         const category = classifyMarket(event.title);
         const eventVolume = event.volume || 0;
 
         // Find the leading outcome (highest yes price)
-        let leadPrice = 0.5;
-        let leadQuestion = event.title;
+        let leadPrice = 0;
         for (const m of event.markets) {
           try {
-            const prices = JSON.parse(m.outcomePrices);
-            const p = parseFloat(prices[0]) || 0;
-            if (p > leadPrice) { leadPrice = p; leadQuestion = m.question; }
-          } catch { /* keep default */ }
+            const prices = JSON.parse(m.outcomePrices) as string[];
+            const p = parseFloat(prices[0]);
+            if (!isNaN(p) && p > leadPrice) leadPrice = p;
+          } catch { /* skip */ }
         }
+        if (leadPrice === 0) leadPrice = 0.5;
 
         await prisma.predictionMarket.upsert({
           where: { externalId },
@@ -113,8 +112,9 @@ async function fetchPolymarket(): Promise<void> {
 
         let yesPrice = 0.5;
         try {
-          const prices = JSON.parse(market.outcomePrices);
-          yesPrice = parseFloat(prices[0]) || 0.5;
+          const prices = JSON.parse(market.outcomePrices) as string[];
+          const p = parseFloat(prices[0]);
+          if (!isNaN(p)) yesPrice = p;
         } catch { /* default */ }
 
         const category = classifyMarket(event.title);
