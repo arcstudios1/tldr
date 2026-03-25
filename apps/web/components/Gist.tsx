@@ -64,8 +64,8 @@ export function GistSkeleton({ cardHeight }: { cardHeight: number }) {
           <div className="skeleton skeleton-text w-4/5" />
         </div>
       </div>
-      <div className="shrink-0 mx-5" style={{ height: 1, backgroundColor: "var(--border)" }} />
-      <div className="px-5 pt-3 pb-2" style={{ flex: "3 1 0" }}>
+      <div className="hidden xl:block shrink-0 mx-5" style={{ height: 1, backgroundColor: "var(--border)" }} />
+      <div className="hidden xl:block px-5 pt-3 pb-2" style={{ flex: "3 1 0" }}>
         <div className="skeleton skeleton-text w-1/3 mb-3" />
         <div className="skeleton skeleton-text w-full mb-2" />
         <div className="skeleton skeleton-text w-2/3" />
@@ -544,11 +544,11 @@ export function Gist({ article, userId, email, username, isBookmarked = false, c
           </a>
         </div>
 
-        {/* Divider */}
-        <div className="shrink-0 mx-5" style={{ height: 1, backgroundColor: "var(--border)" }} />
+        {/* Divider — hidden below xl so article content fills the full card */}
+        <div className="hidden xl:block shrink-0 mx-5" style={{ height: 1, backgroundColor: "var(--border)" }} />
 
-        {/* Comments section — 30% */}
-        <div className="flex flex-col px-5 pt-3 pb-2 min-h-0" style={{ flex: "3 1 0" }}>
+        {/* Comments section — hidden below xl, article content expands to fill */}
+        <div className="hidden xl:flex flex-col px-5 pt-3 pb-2 min-h-0" style={{ flex: "3 1 0" }}>
 
           <div className="flex items-center justify-between mb-2 shrink-0">
             <span className="text-xs font-semibold tracking-widest" style={{ color: "var(--text-muted)" }}>
