@@ -4,7 +4,7 @@ import { prisma } from "../db/client";
 const router = Router();
 
 router.get("/:articleId/sources", async (req: Request, res: Response) => {
-  const { articleId } = req.params;
+  const articleId = req.params.articleId as string;
 
   const article = await prisma.article.findUnique({
     where: { id: articleId },

@@ -95,7 +95,7 @@ router.get("/", async (req: Request, res: Response) => {
 
 router.get("/:id", async (req: Request, res: Response) => {
   const article = await prisma.article.findUnique({
-    where: { id: req.params.id },
+    where: { id: req.params.id as string },
     select: {
       id: true,
       title: true,

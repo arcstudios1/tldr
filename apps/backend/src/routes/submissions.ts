@@ -81,7 +81,7 @@ router.get("/submissions", async (req: Request, res: Response) => {
 });
 
 router.post("/submissions/:id/approve", async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = String(req.params.id);
 
   const submission = await prisma.userSubmission.findUnique({ where: { id } });
   if (!submission) {

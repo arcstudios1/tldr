@@ -9,7 +9,7 @@ function generateCode(): string {
 }
 
 router.get("/:userId/referral", async (req: Request, res: Response) => {
-  const { userId } = req.params;
+  const userId = req.params.userId as string;
 
   let referral = await prisma.referral.findFirst({
     where: { referrerId: userId, referredEmail: null },
@@ -43,7 +43,7 @@ router.get("/:userId/referral", async (req: Request, res: Response) => {
 });
 
 router.get("/:userId/referral/stats", async (req: Request, res: Response) => {
-  const { userId } = req.params;
+  const userId = req.params.userId as string;
 
   const referrals = await prisma.referral.findMany({
     where: { referrerId: userId },

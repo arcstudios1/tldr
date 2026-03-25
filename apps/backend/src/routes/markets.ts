@@ -22,7 +22,7 @@ router.get("/", async (req: Request, res: Response) => {
 });
 
 router.get("/:category", async (req: Request, res: Response) => {
-  const cat = req.params.category.toUpperCase() as Category;
+  const cat = String(req.params.category).toUpperCase() as Category;
   const markets = await prisma.predictionMarket.findMany({
     where: { category: cat },
     orderBy: { volume: "desc" },
