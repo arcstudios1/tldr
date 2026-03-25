@@ -9,6 +9,10 @@ import commentsRouter from "./routes/comments";
 import preferencesRouter from "./routes/preferences";
 import bookmarksRouter from "./routes/bookmarks";
 import sourcesRouter from "./routes/sources";
+import marketsRouter from "./routes/markets";
+import referralsRouter from "./routes/referrals";
+import submissionsRouter from "./routes/submissions";
+import breakingRouter from "./routes/breaking";
 import { feedLimiter, writeLimiter } from "./middleware/rateLimiter";
 import { startScheduler, runPipeline } from "./services/scheduler";
 
@@ -34,6 +38,10 @@ app.use("/articles", writeLimiter, commentsRouter);
 app.use("/articles", feedLimiter, sourcesRouter);
 app.use("/users", writeLimiter, preferencesRouter);
 app.use("/users", writeLimiter, bookmarksRouter);
+app.use("/users", writeLimiter, referralsRouter);
+app.use("/markets", feedLimiter, marketsRouter);
+app.use("/gists", writeLimiter, submissionsRouter);
+app.use("/breaking", feedLimiter, breakingRouter);
 
 app.listen(PORT, () => {
   console.log(`[Server] Gists backend running on port ${PORT}`);

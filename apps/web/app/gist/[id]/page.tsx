@@ -53,6 +53,8 @@ export async function generateMetadata({
   const bullets = gist.summary.split("\n").filter(Boolean);
   const description = bullets.join(" ");
 
+  const ogImage = `https://gists.news/api/og/${id}`;
+
   return {
     title: `${gist.title} — Gists`,
     description,
@@ -62,12 +64,13 @@ export async function generateMetadata({
       type: "article",
       publishedTime: gist.publishedAt,
       siteName: "Gists",
-      ...(gist.imageUrl ? { images: [{ url: gist.imageUrl }] } : {}),
+      images: [{ url: ogImage, width: 1200, height: 630, alt: gist.title }],
     },
     twitter: {
-      card: gist.imageUrl ? "summary_large_image" : "summary",
+      card: "summary_large_image",
       title: gist.title,
       description,
+      images: [ogImage],
     },
   };
 }

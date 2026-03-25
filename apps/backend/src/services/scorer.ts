@@ -58,8 +58,25 @@ function calcFeedScore(params: {
   return catWeight * (numerator / timeDecay);
 }
 
+const BREAKING_THRESHOLD = 3.5;
+
+function calcBreakingScore(params: {
+  importanceScore: number;
+  sourceCount: number;
+  hoursOld: number;
+  category: Category;
+}): number {
+  if (params.hoursOld > 6) return 0;
+  const recency = Math.max(0, 1 - params.hoursOld / 6);
+  const importance = params.importanceScore / 10;
+  const sources = Math.min(params.sourceCount / 5, 1);
+  const catBoost = params.category === "POLITICS" ? 1.3 : 1.0;
+  return catBoost * (importance * 0.4 + sources * 0.35 + recency * 0.25) * 5;
+}
+
 /**
  * Recalculates feedScore for all articles published in the last 72 hours.
+ * Also detects breaking news (high breakingScore on fresh stories).
  * Intended to run every 30 minutes via the scheduler.
  */
 export async function updateFeedScores(): Promise<void> {
@@ -73,13 +90,12 @@ export async function updateFeedScores(): Promise<void> {
       sourceCount: true,
       publishedAt: true,
       category: true,
-      // Re-enable with engagement signals:
-      // _count: { select: { votes: true, comments: true, bookmarks: true } },
-      // votes: { select: { value: true } },
     },
   });
 
   if (articles.length === 0) return;
+
+  let breakingCount = 0;
 
   const updates = articles.map((a) => {
     const score = calcFeedScore({
@@ -88,12 +104,27 @@ export async function updateFeedScores(): Promise<void> {
       publishedAt: a.publishedAt,
       category: a.category,
     });
+
+    const hoursOld = (Date.now() - a.publishedAt.getTime()) / (1000 * 60 * 60);
+    const bScore = calcBreakingScore({
+      importanceScore: a.importanceScore,
+      sourceCount: a.sourceCount,
+      hoursOld,
+      category: a.category,
+    });
+
+    const isBreaking = bScore >= BREAKING_THRESHOLD;
+    if (isBreaking) breakingCount++;
+
     return prisma.article.update({
       where: { id: a.id },
-      data: { feedScore: score },
+      data: { feedScore: score, breakingScore: bScore, isBreaking },
     });
   });
 
   await Promise.all(updates);
-  console.log(`[Scorer] Updated feedScore for ${articles.length} articles`);
+  console.log(
+    `[Scorer] Updated feedScore for ${articles.length} articles` +
+    (breakingCount > 0 ? ` (${breakingCount} breaking)` : "")
+  );
 }

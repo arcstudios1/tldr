@@ -8,6 +8,7 @@ import { fetchGNews } from "./gnews";
 import { summarizeArticle } from "./summarizer";
 import { updateFeedScores } from "./scorer";
 import { enrichMissingImages } from "./imageEnricher";
+import { syncPredictionMarkets } from "./predictionMarkets";
 
 const STOP_WORDS = new Set([
   "a", "an", "the", "in", "on", "at", "to", "for", "of", "and", "or", "but",
@@ -181,14 +182,24 @@ export function startScheduler(): void {
     );
   });
 
-  // Startup run after 15s (server warm-up buffer)
+  // Prediction markets: every 2 hours
+  cron.schedule("15 */2 * * *", () => {
+    syncPredictionMarkets().catch((err) =>
+      console.error("[Scheduler] PredictionMarkets error:", err)
+    );
+  });
+
+  // Startup runs
   setTimeout(() => {
     runPipeline().catch((err) =>
       console.error("[Scheduler] Startup pipeline error:", err)
     );
+    syncPredictionMarkets().catch((err) =>
+      console.error("[Scheduler] Startup markets error:", err)
+    );
   }, 15_000);
 
   console.log(
-    "[Scheduler] Pipeline: hourly | Scorer: every 30 min | First run in 15s"
+    "[Scheduler] Pipeline: hourly | Scorer: 30 min | Markets: 2h | First run in 15s"
   );
 }

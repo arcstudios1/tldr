@@ -1,6 +1,7 @@
 "use client";
 
-import { Article } from "@/lib/api";
+import { Article, Category } from "@/lib/api";
+import { PredictionMarkets } from "./PredictionMarkets";
 
 const CATEGORY_COLORS: Record<string, string> = {
   TECH: "#60a5fa",
@@ -23,9 +24,10 @@ function formatTimeAgo(date: Date): string {
 interface Props {
   trendingArticles: Article[];
   onScrollToArticle: (id: string) => void;
+  selectedCategory?: Category | null;
 }
 
-export function RightPanel({ trendingArticles, onScrollToArticle }: Props) {
+export function RightPanel({ trendingArticles, onScrollToArticle, selectedCategory }: Props) {
   return (
     <div
       className="hidden lg:flex flex-col gap-0 pt-6 pl-8"
@@ -100,6 +102,9 @@ export function RightPanel({ trendingArticles, onScrollToArticle }: Props) {
           ))}
         </div>
       )}
+
+      {/* Prediction Markets */}
+      <PredictionMarkets category={selectedCategory ?? undefined} />
 
       {/* Keyboard shortcuts hint */}
       <div

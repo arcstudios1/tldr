@@ -90,6 +90,54 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+export interface PredictionMarket {
+  id: string;
+  externalId: string;
+  platform: string;
+  question: string;
+  category: Category;
+  yesPrice: number;
+  volume: number;
+  url: string;
+  affiliateUrl: string | null;
+  imageUrl: string | null;
+  endDate: string | null;
+}
+
+export interface MarketsResponse {
+  items: PredictionMarket[];
+}
+
+export interface ReferralInfo {
+  code: string;
+  link: string;
+  totalReferred: number;
+}
+
+export interface ReferralStats {
+  total: number;
+  completed: number;
+  pending: number;
+  referrals: { code: string; status: string; createdAt: string; completedAt: string | null }[];
+}
+
+export interface BreakingResponse {
+  count: number;
+  items: (Article & { breakingScore: number })[];
+  lastChecked: string;
+}
+
+export interface UserSubmission {
+  id: string;
+  title: string;
+  url: string;
+  category: Category;
+  description: string | null;
+  status: string;
+  createdAt: string;
+  user?: { username: string; reputation: number };
+}
+
 export const api = {
   getPreferences: (userId: string): Promise<Preferences> =>
     request<Preferences>(`/users/${userId}/preferences`),
@@ -162,4 +210,43 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ userId, email, username, body }),
     }),
+
+  getMarkets: (category?: Category): Promise<MarketsResponse> => {
+    const path = category ? `/markets/${category}` : "/markets";
+    return request<MarketsResponse>(path);
+  },
+
+  getReferral: (userId: string): Promise<ReferralInfo> =>
+    request<ReferralInfo>(`/users/${userId}/referral`),
+
+  getReferralStats: (userId: string): Promise<ReferralStats> =>
+    request<ReferralStats>(`/users/${userId}/referral/stats`),
+
+  redeemReferral: (code: string, email: string) =>
+    request<{ success: boolean; message: string }>("/users/referral/redeem", {
+      method: "POST",
+      body: JSON.stringify({ code, email }),
+    }),
+
+  submitGist: (params: {
+    userId: string;
+    email: string;
+    username: string;
+    title: string;
+    url: string;
+    category: Category;
+    description?: string;
+  }) =>
+    request<{ id: string; status: string; message?: string }>("/gists/submit", {
+      method: "POST",
+      body: JSON.stringify(params),
+    }),
+
+  getSubmissions: (userId?: string): Promise<{ items: UserSubmission[] }> => {
+    const query = userId ? `?userId=${userId}` : "";
+    return request<{ items: UserSubmission[] }>(`/gists/submissions${query}`);
+  },
+
+  getBreaking: (): Promise<BreakingResponse> =>
+    request<BreakingResponse>("/breaking"),
 };

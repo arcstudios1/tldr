@@ -9,6 +9,8 @@ import { CategoryBar, TabValue } from "@/components/CategoryBar";
 import { LeftPanel } from "@/components/LeftPanel";
 import { RightPanel } from "@/components/RightPanel";
 import { SearchOverlay } from "@/components/SearchOverlay";
+import { BreakingBanner } from "@/components/BreakingBanner";
+import { SubmitGistModal } from "@/components/SubmitGistModal";
 import type { User } from "@supabase/supabase-js";
 
 const AD_INTERVAL = 6;
@@ -168,6 +170,7 @@ export default function FeedPage() {
   const [activeCardIndex, setActiveCardIndex] = useState(0);
   const [readIds, setReadIds] = useState<Set<string>>(new Set());
   const [showDigestBanner, setShowDigestBanner] = useState(false);
+  const [submitModalOpen, setSubmitModalOpen] = useState(false);
   const feedRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
 
@@ -397,6 +400,21 @@ export default function FeedPage() {
             gists
           </Link>
           <div className="flex items-center gap-2">
+            {/* Submit gist button */}
+            {user && (
+              <button
+                onClick={() => setSubmitModalOpen(true)}
+                className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+                style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)", color: "var(--text-muted)" }}
+                title="Submit a gist"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+              </button>
+            )}
+
             {/* Search button */}
             <button
               onClick={() => setSearchOpen(true)}
@@ -447,6 +465,9 @@ export default function FeedPage() {
           onSelect={setSelectedTab}
           sort={feedSort}
           onSortChange={setFeedSort}
+        />
+        <BreakingBanner
+          onSelectArticle={(article) => scrollToArticle(article.id)}
         />
       </div>
 
@@ -523,6 +544,7 @@ export default function FeedPage() {
       <RightPanel
         trendingArticles={trendingArticles}
         onScrollToArticle={scrollToArticle}
+        selectedCategory={selectedCategory}
       />
 
       </div>{/* end max-width wrapper */}
@@ -536,6 +558,16 @@ export default function FeedPage() {
             window.open(article.sourceUrl, "_blank");
           }}
           isAuthenticated={!!user}
+        />
+      )}
+
+      {/* Submit gist modal */}
+      {submitModalOpen && user && (
+        <SubmitGistModal
+          userId={user.id}
+          email={user.email ?? ""}
+          username={user.user_metadata?.username ?? "user"}
+          onClose={() => setSubmitModalOpen(false)}
         />
       )}
     </div>
