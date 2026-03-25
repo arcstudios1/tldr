@@ -42,6 +42,57 @@ const FEATURES: { icon: React.ReactNode; title: string; desc: string }[] = [
   },
 ];
 
+const HOW_IT_WORKS: { step: string; icon: React.ReactNode; title: string; desc: string }[] = [
+  {
+    step: "01",
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--accent)" }}>
+        <circle cx="12" cy="12" r="10" />
+        <line x1="2" y1="12" x2="22" y2="12" />
+        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+      </svg>
+    ),
+    title: "Collected",
+    desc: "Stories are pulled every hour from trusted outlets across tech, finance, politics, culture, and sports.",
+  },
+  {
+    step: "02",
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--accent)" }}>
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      </svg>
+    ),
+    title: "Grouped",
+    desc: "When multiple outlets cover the same event, they're merged into one story — no duplicates cluttering your feed.",
+  },
+  {
+    step: "03",
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--accent)" }}>
+        <line x1="18" y1="20" x2="18" y2="10" />
+        <line x1="12" y1="20" x2="12" y2="4" />
+        <line x1="6" y1="20" x2="6" y2="14" />
+      </svg>
+    ),
+    title: "Ranked",
+    desc: "Stories reported by more sources rise to the top. Older stories decay over time, so the feed always reflects what matters right now.",
+  },
+  {
+    step: "04",
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--accent)" }}>
+        <polyline points="9 11 12 14 22 4" />
+        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+      </svg>
+    ),
+    title: "Delivered",
+    desc: "Your feed is ordered by significance, filtered to the topics you've chosen — nothing arbitrary, nothing missed.",
+  },
+];
+
 const CATEGORY_PILLS = [
   { label: "Tech", color: "#60a5fa" },
   { label: "Finance", color: "#34d399" },
@@ -191,6 +242,34 @@ export default function LandingPage() {
               <div className="text-2xl mb-3">{f.icon}</div>
               <h3 className="font-semibold mb-2" style={{ color: "var(--text-primary)" }}>{f.title}</h3>
               <p className="text-sm" style={{ color: "var(--text-muted)", lineHeight: 1.6 }}>{f.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section className="px-6 pb-20 max-w-3xl mx-auto">
+        <div className="text-center mb-10">
+          <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "var(--accent)" }}>
+            Transparency
+          </p>
+          <h2 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
+            How the feed works
+          </h2>
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+          {HOW_IT_WORKS.map((item) => (
+            <div
+              key={item.step}
+              className="p-6 rounded-2xl flex flex-col gap-3"
+              style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
+            >
+              <span className="text-xs font-bold tracking-widest" style={{ color: "var(--accent)", opacity: 0.6 }}>
+                {item.step}
+              </span>
+              {item.icon}
+              <h3 className="font-semibold" style={{ color: "var(--text-primary)" }}>{item.title}</h3>
+              <p className="text-sm" style={{ color: "var(--text-muted)", lineHeight: 1.6 }}>{item.desc}</p>
             </div>
           ))}
         </div>
