@@ -4,11 +4,11 @@ import { useState, useEffect, useRef } from "react";
 import { Article, Comment, GistSource, PredictionMarket, api } from "@/lib/api";
 
 const CATEGORY_COLORS: Record<string, string> = {
-  TECH: "#60a5fa",
-  FINANCE: "#34d399",
-  POLITICS: "#f87171",
-  CULTURE: "#c084fc",
-  SPORTS: "#fb923c",
+  TECH: "var(--category-tech)",
+  FINANCE: "var(--category-finance)",
+  POLITICS: "var(--category-politics)",
+  CULTURE: "var(--category-culture)",
+  SPORTS: "var(--category-sports)",
 };
 
 function formatTimeAgo(date: Date): string {
@@ -179,7 +179,7 @@ export function Gist({ article, userId, email, username, isBookmarked = false, c
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [article.id, commentsFetched]);
 
-  const categoryColor = CATEGORY_COLORS[article.category] ?? "#60a5fa";
+  const categoryColor = CATEGORY_COLORS[article.category] ?? "var(--category-tech)";
   const timeAgo = formatTimeAgo(new Date(article.publishedAt));
   const readTime = getGistReadTime();
   const freshness = getFreshnessTag(article.publishedAt, article.feedScore);
@@ -433,7 +433,7 @@ export function Gist({ article, userId, email, username, isBookmarked = false, c
           ) : (
             <div
               className="w-full rounded-lg shrink-0 flex items-center justify-center"
-              style={{ height: imageHeight, backgroundColor: "#0a0a0a", border: "1px solid var(--border)" }}
+              style={{ height: imageHeight, backgroundColor: "var(--surface-deep)", border: "1px solid var(--border)" }}
             >
               <span className="wordmark font-bold" style={{ color: "var(--border)", fontSize: 20 }}>gists</span>
             </div>
@@ -628,7 +628,7 @@ export function Gist({ article, userId, email, username, isBookmarked = false, c
                     onClick={handlePost}
                     disabled={!commentBody.trim() || posting}
                     className="shrink-0 text-xs px-3 py-1.5 rounded-lg font-medium transition-opacity disabled:opacity-40"
-                    style={{ backgroundColor: "var(--accent)", color: "#000" }}
+                    style={{ backgroundColor: "var(--accent)", color: "var(--accent-on)" }}
                   >
                     {posting ? "…" : "Post"}
                   </button>

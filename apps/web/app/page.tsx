@@ -4,6 +4,7 @@ import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const CARD_BULLETS = [
   "Federal Reserve holds rates steady for the third consecutive meeting.",
@@ -124,11 +125,11 @@ const FEATURES: { icon: React.ReactNode; title: string; desc: string }[] = [
 ];
 
 const CATEGORY_PILLS = [
-  { label: "Tech", color: "#60a5fa" },
-  { label: "Finance", color: "#34d399" },
-  { label: "Politics", color: "#f87171" },
-  { label: "Culture", color: "#c084fc" },
-  { label: "Sports", color: "#fb923c" },
+  { label: "Tech", color: "var(--category-tech)" },
+  { label: "Finance", color: "var(--category-finance)" },
+  { label: "Politics", color: "var(--category-politics)" },
+  { label: "Culture", color: "var(--category-culture)" },
+  { label: "Sports", color: "var(--category-sports)" },
 ];
 
 function ArticleCard() {
@@ -137,13 +138,13 @@ function ArticleCard() {
       className="w-full max-w-sm rounded-2xl overflow-hidden"
       style={{ border: "1px solid var(--border)", backgroundColor: "var(--surface)" }}
     >
-      <div className="w-full h-44 flex items-center justify-center" style={{ backgroundColor: "#0a0a0a" }}>
+      <div className="w-full h-44 flex items-center justify-center" style={{ backgroundColor: "var(--surface-deep)" }}>
         <span className="wordmark text-2xl font-bold" style={{ color: "var(--border)" }}>gists</span>
       </div>
       <div className="p-5">
         {/* Meta row — with new source badge + freshness tag */}
         <div className="flex items-center gap-2 mb-3 flex-wrap">
-          <span className="text-xs px-1.5 py-0.5 rounded border font-semibold tracking-wide" style={{ color: "#34d399", borderColor: "#34d399" }}>FINANCE</span>
+          <span className="text-xs px-1.5 py-0.5 rounded border font-semibold tracking-wide" style={{ color: "var(--category-finance)", borderColor: "var(--category-finance)" }}>FINANCE</span>
           <span className="freshness-tag freshness-breaking">
             <span style={{ width: 5, height: 5, borderRadius: "50%", backgroundColor: "#f87171", display: "inline-block" }} />
             Breaking
@@ -218,10 +219,11 @@ export default function LandingPage() {
       {/* Nav */}
       <nav
         className="flex items-center justify-between px-6 py-4 sticky top-0 z-10"
-        style={{ borderBottom: "1px solid var(--border)", backgroundColor: "rgba(0,0,0,0.85)", backdropFilter: "blur(12px)" }}
+        style={{ borderBottom: "1px solid var(--border)", backgroundColor: "var(--nav-bg)", backdropFilter: "blur(12px)" }}
       >
         <span className="wordmark text-xl font-bold">gists</span>
         <div className="flex items-center gap-3">
+          <ThemeToggle />
           <Link
             href="/sign-in"
             className="text-sm px-4 py-2 rounded-full transition-colors"
@@ -232,7 +234,7 @@ export default function LandingPage() {
           <Link
             href="/sign-up"
             className="text-sm px-4 py-2 rounded-full font-medium transition-colors"
-            style={{ backgroundColor: "var(--accent)", color: "#000" }}
+            style={{ backgroundColor: "var(--accent)", color: "var(--accent-on)" }}
           >
             Get started
           </Link>
@@ -282,7 +284,7 @@ export default function LandingPage() {
             <Link
               href="/feed"
               className="px-6 py-3 rounded-full font-semibold text-sm transition-all hover:opacity-90 active:scale-95"
-              style={{ backgroundColor: "var(--accent)", color: "#000" }}
+              style={{ backgroundColor: "var(--accent)", color: "var(--accent-on)" }}
             >
               Start reading →
             </Link>
@@ -403,7 +405,7 @@ export default function LandingPage() {
         <Link
           href="/feed"
           className="inline-block px-8 py-4 rounded-full font-semibold transition-all hover:opacity-90"
-          style={{ backgroundColor: "var(--accent)", color: "#000" }}
+          style={{ backgroundColor: "var(--accent)", color: "var(--accent-on)" }}
         >
           Open the feed →
         </Link>

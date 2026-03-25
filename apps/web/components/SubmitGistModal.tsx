@@ -6,11 +6,11 @@ import { api, Category } from "@/lib/api";
 const CATEGORIES: Category[] = ["TECH", "FINANCE", "POLITICS", "CULTURE", "SPORTS"];
 
 const CATEGORY_COLORS: Record<string, string> = {
-  TECH: "#60a5fa",
-  FINANCE: "#34d399",
-  POLITICS: "#f87171",
-  CULTURE: "#c084fc",
-  SPORTS: "#fb923c",
+  TECH: "var(--category-tech)",
+  FINANCE: "var(--category-finance)",
+  POLITICS: "var(--category-politics)",
+  CULTURE: "var(--category-culture)",
+  SPORTS: "var(--category-sports)",
 };
 
 interface Props {
@@ -67,7 +67,7 @@ export function SubmitGistModal({ userId, email, username, onClose }: Props) {
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center"
-      style={{ backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
+      style={{ backgroundColor: "var(--overlay-bg)", backdropFilter: "blur(4px)" }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
@@ -112,7 +112,7 @@ export function SubmitGistModal({ userId, email, username, onClose }: Props) {
             <button
               onClick={onClose}
               className="px-6 py-2.5 rounded-full text-sm font-semibold"
-              style={{ backgroundColor: "var(--accent)", color: "#000" }}
+              style={{ backgroundColor: "var(--accent)", color: "var(--accent-on)" }}
             >
               Done
             </button>
@@ -207,7 +207,7 @@ export function SubmitGistModal({ userId, email, username, onClose }: Props) {
               onClick={handleSubmit}
               disabled={submitting || !title.trim() || !url.trim()}
               className="w-full py-2.5 rounded-full text-sm font-semibold transition-all disabled:opacity-40"
-              style={{ backgroundColor: "var(--accent)", color: "#000" }}
+              style={{ backgroundColor: "var(--accent)", color: "var(--accent-on)" }}
             >
               {submitting ? "Submitting..." : "Submit Gist"}
             </button>

@@ -12,11 +12,11 @@ const TOPICS: {
   icon: string;
   color: string;
 }[] = [
-  { id: "TECH",     label: "Tech",     description: "Software, startups & science",    icon: "⚡", color: "#60a5fa" },
-  { id: "FINANCE",  label: "Finance",  description: "Markets, investing & the economy", icon: "📈", color: "#34d399" },
-  { id: "POLITICS", label: "Politics", description: "Policy, elections & world affairs", icon: "🏛️", color: "#f87171" },
-  { id: "CULTURE",  label: "Culture",  description: "Entertainment, arts & trending",   icon: "🎭", color: "#c084fc" },
-  { id: "SPORTS",   label: "Sports",   description: "Scores, trades & sports news",     icon: "🏆", color: "#fb923c" },
+  { id: "TECH",     label: "Tech",     description: "Software, startups & science",    icon: "⚡", color: "var(--category-tech)" },
+  { id: "FINANCE",  label: "Finance",  description: "Markets, investing & the economy", icon: "📈", color: "var(--category-finance)" },
+  { id: "POLITICS", label: "Politics", description: "Policy, elections & world affairs", icon: "🏛️", color: "var(--category-politics)" },
+  { id: "CULTURE",  label: "Culture",  description: "Entertainment, arts & trending",   icon: "🎭", color: "var(--category-culture)" },
+  { id: "SPORTS",   label: "Sports",   description: "Scores, trades & sports news",     icon: "🏆", color: "var(--category-sports)" },
 ];
 
 export default function OnboardingCategoriesPage() {
@@ -139,7 +139,7 @@ export default function OnboardingCategoriesPage() {
                 {active && (
                   <div
                     className="absolute top-2 right-2 w-4 h-4 rounded-full flex items-center justify-center text-xs"
-                    style={{ backgroundColor: topic.color, color: "#000" }}
+                    style={{ backgroundColor: topic.color, color: "var(--accent-on)" }}
                   />
                 )}
               </button>
@@ -181,7 +181,7 @@ export default function OnboardingCategoriesPage() {
               >
                 {active && (
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                    <path d="M2 5l2.5 2.5L8 3" stroke="#000" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M2 5l2.5 2.5L8 3" stroke="var(--accent-on)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 )}
               </div>
@@ -202,7 +202,7 @@ export default function OnboardingCategoriesPage() {
             onClick={handleContinue}
             disabled={selected.size === 0 || saving}
             className="w-full py-3.5 rounded-xl font-semibold text-sm transition-all disabled:opacity-40"
-            style={{ backgroundColor: "var(--accent)", color: "#000" }}
+            style={{ backgroundColor: "var(--accent)", color: "var(--accent-on)" }}
           >
             {saving ? "Setting up your feed…" : `Continue with ${selected.size > 0 ? selected.size : ""} topic${selected.size !== 1 ? "s" : ""} →`}
           </button>

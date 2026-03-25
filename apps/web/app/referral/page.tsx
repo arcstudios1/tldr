@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { api, ReferralInfo, ReferralStats } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import type { User } from "@supabase/supabase-js";
 
 export default function ReferralPage() {
@@ -46,7 +47,7 @@ export default function ReferralPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4" style={{ backgroundColor: "var(--bg)" }}>
         <h1 className="text-xl font-bold" style={{ color: "var(--text-primary)" }}>Sign in to access referrals</h1>
-        <Link href="/sign-in" className="text-sm px-5 py-2 rounded-full" style={{ backgroundColor: "var(--accent)", color: "#000" }}>
+        <Link href="/sign-in" className="text-sm px-5 py-2 rounded-full" style={{ backgroundColor: "var(--accent)", color: "var(--accent-on)" }}>
           Sign in →
         </Link>
       </div>
@@ -58,12 +59,15 @@ export default function ReferralPage() {
       {/* Nav */}
       <nav
         className="flex items-center justify-between px-6 py-4 sticky top-0 z-10"
-        style={{ borderBottom: "1px solid var(--border)", backgroundColor: "rgba(0,0,0,0.85)", backdropFilter: "blur(12px)" }}
+        style={{ borderBottom: "1px solid var(--border)", backgroundColor: "var(--nav-bg)", backdropFilter: "blur(12px)" }}
       >
         <Link href="/" className="wordmark text-xl font-bold" style={{ color: "var(--text-primary)" }}>gists</Link>
-        <Link href="/feed" className="text-sm px-4 py-2 rounded-full" style={{ color: "var(--text-secondary)", border: "1px solid var(--border)" }}>
-          Back to feed
-        </Link>
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
+          <Link href="/feed" className="text-sm px-4 py-2 rounded-full" style={{ color: "var(--text-secondary)", border: "1px solid var(--border)" }}>
+            Back to feed
+          </Link>
+        </div>
       </nav>
 
       <div className="max-w-lg mx-auto px-6 pt-12 pb-20">
@@ -99,7 +103,7 @@ export default function ReferralPage() {
                 <button
                   onClick={handleCopy}
                   className="px-4 py-2 rounded-lg text-sm font-semibold shrink-0"
-                  style={{ backgroundColor: "var(--accent)", color: "#000" }}
+                  style={{ backgroundColor: "var(--accent)", color: "var(--accent-on)" }}
                 >
                   {copied ? "Copied!" : "Copy"}
                 </button>

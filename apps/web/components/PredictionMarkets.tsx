@@ -4,11 +4,11 @@ import { useState, useEffect } from "react";
 import { api, PredictionMarket, Category } from "@/lib/api";
 
 const CATEGORY_COLORS: Record<string, string> = {
-  TECH: "#60a5fa",
-  FINANCE: "#34d399",
-  POLITICS: "#f87171",
-  CULTURE: "#c084fc",
-  SPORTS: "#fb923c",
+  TECH: "var(--category-tech)",
+  FINANCE: "var(--category-finance)",
+  POLITICS: "var(--category-politics)",
+  CULTURE: "var(--category-culture)",
+  SPORTS: "var(--category-sports)",
 };
 
 function formatPercent(price: number): string {
@@ -92,7 +92,7 @@ export function PredictionMarkets({ category }: Props) {
 
       <div className="flex flex-col gap-2">
         {visible.map((market) => {
-          const catColor = CATEGORY_COLORS[market.category] ?? "#60a5fa";
+          const catColor = CATEGORY_COLORS[market.category] ?? "var(--category-tech)";
           const percent = formatPercent(market.yesPrice);
           const isHigh = market.yesPrice >= 0.7;
           const isLow = market.yesPrice <= 0.3;

@@ -4,11 +4,11 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Article, api } from "@/lib/api";
 
 const CATEGORY_COLORS: Record<string, string> = {
-  TECH: "#60a5fa",
-  FINANCE: "#34d399",
-  POLITICS: "#f87171",
-  CULTURE: "#c084fc",
-  SPORTS: "#fb923c",
+  TECH: "var(--category-tech)",
+  FINANCE: "var(--category-finance)",
+  POLITICS: "var(--category-politics)",
+  CULTURE: "var(--category-culture)",
+  SPORTS: "var(--category-sports)",
 };
 
 function formatTimeAgo(date: Date): string {
@@ -74,7 +74,7 @@ export function SearchOverlay({ onClose, onSelectArticle, isAuthenticated = fals
   return (
     <div
       className="fixed inset-0 z-50 flex flex-col"
-      style={{ backgroundColor: "rgba(0,0,0,0.85)", backdropFilter: "blur(8px)" }}
+      style={{ backgroundColor: "var(--nav-bg)", backdropFilter: "blur(8px)" }}
     >
       {/* Search bar */}
       <div
@@ -147,7 +147,7 @@ export function SearchOverlay({ onClose, onSelectArticle, isAuthenticated = fals
                 {results.length} result{results.length !== 1 ? "s" : ""}
               </p>
               {(isAuthenticated ? results : results.slice(0, 2)).map((article) => {
-                const catColor = CATEGORY_COLORS[article.category] ?? "#60a5fa";
+                const catColor = CATEGORY_COLORS[article.category] ?? "var(--category-tech)";
                 return (
                   <button
                     key={article.id}
@@ -210,7 +210,7 @@ export function SearchOverlay({ onClose, onSelectArticle, isAuthenticated = fals
                   <a
                     href="/sign-up"
                     className="inline-block px-5 py-2 rounded-full text-sm font-semibold"
-                    style={{ backgroundColor: "var(--accent)", color: "#000" }}
+                    style={{ backgroundColor: "var(--accent)", color: "var(--accent-on)" }}
                   >
                     Create free account
                   </a>

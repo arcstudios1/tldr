@@ -1,21 +1,53 @@
 @import "tailwindcss";
 
+/* Light mode (default) */
 :root {
+  --bg: #ffffff;
+  --surface: #f5f5f5;
+  --surface-hover: #ebebeb;
+  --surface-deep: #e8e8e8;
+  --border: #e5e7eb;
+  --text-primary: #111111;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
+  --accent: #2563eb;
+  --accent-dim: rgba(37, 99, 235, 0.08);
+  --accent-on: #ffffff;
+  --upvote: #2563eb;
+  --downvote: #ef4444;
+  --nav-bg: rgba(255, 255, 255, 0.85);
+  --overlay-bg: rgba(0, 0, 0, 0.3);
+  --skeleton-highlight: #ebebeb;
+  --category-tech: #2563eb;
+  --category-finance: #059669;
+  --category-politics: #dc2626;
+  --category-culture: #9333ea;
+  --category-sports: #ea580c;
+}
+
+/* Dark mode — the original aesthetic */
+[data-theme="dark"] {
   --bg: #000000;
   --surface: #111111;
   --surface-hover: #1a1a1a;
+  --surface-deep: #0a0a0a;
   --border: #1f2937;
   --text-primary: #ffffff;
   --text-secondary: #9ca3af;
   --text-muted: #4b5563;
   --accent: #60a5fa;
   --accent-dim: rgba(96, 165, 250, 0.1);
+  --accent-on: #000000;
   --upvote: #3b82f6;
   --downvote: #ef4444;
+  --nav-bg: rgba(0, 0, 0, 0.85);
+  --overlay-bg: rgba(0, 0, 0, 0.6);
+  --skeleton-highlight: #1a1a1a;
   --category-tech: #60a5fa;
   --category-finance: #34d399;
   --category-politics: #f87171;
   --category-culture: #c084fc;
+  --category-sports: #fb923c;
 }
 
 @theme inline {
@@ -130,7 +162,7 @@ body {
 
 /* Skeleton loading blocks */
 .skeleton {
-  background: linear-gradient(90deg, var(--surface) 25%, #1a1a1a 50%, var(--surface) 75%);
+  background: linear-gradient(90deg, var(--surface) 25%, var(--skeleton-highlight) 50%, var(--surface) 75%);
   background-size: 800px 100%;
   animation: shimmer 1.6s ease-in-out infinite;
   border-radius: 8px;

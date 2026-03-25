@@ -4,11 +4,11 @@ import { Article, Category } from "@/lib/api";
 import { PredictionMarkets } from "./PredictionMarkets";
 
 const CATEGORY_COLORS: Record<string, string> = {
-  TECH: "#60a5fa",
-  FINANCE: "#34d399",
-  POLITICS: "#f87171",
-  CULTURE: "#c084fc",
-  SPORTS: "#fb923c",
+  TECH: "var(--category-tech)",
+  FINANCE: "var(--category-finance)",
+  POLITICS: "var(--category-politics)",
+  CULTURE: "var(--category-culture)",
+  SPORTS: "var(--category-sports)",
 };
 
 function formatTimeAgo(date: Date): string {

@@ -5,14 +5,15 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { api, Category } from "@/lib/api";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import type { User } from "@supabase/supabase-js";
 
 const CATEGORY_META: { id: Category; label: string; color: string; icon: string; description: string }[] = [
-  { id: "TECH",     label: "Tech",     color: "#60a5fa", icon: "⚡", description: "Software, startups & science" },
-  { id: "FINANCE",  label: "Finance",  color: "#34d399", icon: "📈", description: "Markets, investing & the economy" },
-  { id: "POLITICS", label: "Politics", color: "#f87171", icon: "🏛️", description: "Policy, elections & world affairs" },
-  { id: "CULTURE",  label: "Culture",  color: "#c084fc", icon: "🎭", description: "Entertainment, arts & trending" },
-  { id: "SPORTS",   label: "Sports",   color: "#fb923c", icon: "🏆", description: "Scores, trades & sports news" },
+  { id: "TECH",     label: "Tech",     color: "var(--category-tech)", icon: "⚡", description: "Software, startups & science" },
+  { id: "FINANCE",  label: "Finance",  color: "var(--category-finance)", icon: "📈", description: "Markets, investing & the economy" },
+  { id: "POLITICS", label: "Politics", color: "var(--category-politics)", icon: "🏛️", description: "Policy, elections & world affairs" },
+  { id: "CULTURE",  label: "Culture",  color: "var(--category-culture)", icon: "🎭", description: "Entertainment, arts & trending" },
+  { id: "SPORTS",   label: "Sports",   color: "var(--category-sports)", icon: "🏆", description: "Scores, trades & sports news" },
 ];
 
 const ALL_SOURCES: { name: string; category: Category }[] = [
@@ -110,13 +111,13 @@ export default function ProfilePage() {
       {/* Header */}
       <div
         className="flex items-center justify-between px-5 py-3 sticky top-0 z-10"
-        style={{ borderBottom: "1px solid var(--border)", backgroundColor: "rgba(0,0,0,0.85)", backdropFilter: "blur(12px)" }}
+        style={{ borderBottom: "1px solid var(--border)", backgroundColor: "var(--nav-bg)", backdropFilter: "blur(12px)" }}
       >
         <Link href="/feed" className="text-sm flex items-center gap-1.5" style={{ color: "var(--text-secondary)" }}>
           ← Feed
         </Link>
         <span className="wordmark text-xl font-bold" style={{ color: "var(--text-primary)" }}>gists</span>
-        <div style={{ width: 48 }} />
+        <ThemeToggle />
       </div>
 
       <div className="max-w-sm mx-auto px-5 py-8 flex flex-col gap-5">
@@ -203,7 +204,7 @@ export default function ProfilePage() {
                       className="w-4 h-4 rounded-full border flex items-center justify-center shrink-0"
                       style={{ borderColor: active ? topic.color : "var(--border)", backgroundColor: active ? topic.color : "transparent" }}
                     >
-                      {active && <svg width="8" height="8" viewBox="0 0 8 8"><path d="M1.5 4l2 2L6.5 2" stroke="#000" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+                      {active && <svg width="8" height="8" viewBox="0 0 8 8"><path d="M1.5 4l2 2L6.5 2" stroke="var(--accent-on)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>}
                     </div>
                   </button>
                 );
@@ -284,7 +285,7 @@ export default function ProfilePage() {
             onClick={handleSave}
             disabled={saving || categories.size === 0}
             className="w-full py-3 rounded-xl text-sm font-semibold transition-opacity disabled:opacity-40"
-            style={{ backgroundColor: "var(--accent)", color: "#000" }}
+            style={{ backgroundColor: "var(--accent)", color: "var(--accent-on)" }}
           >
             {saving ? "Saving…" : "Save preferences"}
           </button>

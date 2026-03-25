@@ -5,11 +5,11 @@ import Link from "next/link";
 import { Article, Category } from "@/lib/api";
 
 const CATEGORY_CONFIG: { value: Category; label: string; color: string }[] = [
-  { value: "TECH", label: "Tech", color: "#60a5fa" },
-  { value: "FINANCE", label: "Finance", color: "#34d399" },
-  { value: "POLITICS", label: "Politics", color: "#f87171" },
-  { value: "CULTURE", label: "Culture", color: "#c084fc" },
-  { value: "SPORTS", label: "Sports", color: "#fb923c" },
+  { value: "TECH", label: "Tech", color: "var(--category-tech)" },
+  { value: "FINANCE", label: "Finance", color: "var(--category-finance)" },
+  { value: "POLITICS", label: "Politics", color: "var(--category-politics)" },
+  { value: "CULTURE", label: "Culture", color: "var(--category-culture)" },
+  { value: "SPORTS", label: "Sports", color: "var(--category-sports)" },
 ];
 
 function formatLastUpdated(date: Date): string {

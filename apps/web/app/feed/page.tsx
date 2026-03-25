@@ -11,6 +11,7 @@ import { RightPanel } from "@/components/RightPanel";
 import { SearchOverlay } from "@/components/SearchOverlay";
 import { BreakingBanner } from "@/components/BreakingBanner";
 import { SubmitGistModal } from "@/components/SubmitGistModal";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import type { User } from "@supabase/supabase-js";
 
 const AD_INTERVAL = 6;
@@ -80,7 +81,7 @@ function AdCard({ cardHeight }: { cardHeight: number }) {
         <span className="text-sm flex-1" style={{ color: "var(--text-secondary)" }}>Gists for Business</span>
       </div>
       <div className="flex-1 flex flex-col px-5 pb-4 gap-3">
-        <div className="w-full rounded-lg flex items-center justify-center shrink-0" style={{ height: Math.round(cardHeight * 0.28), backgroundColor: "#0a0a0a", border: "1px solid var(--border)" }}>
+        <div className="w-full rounded-lg flex items-center justify-center shrink-0" style={{ height: Math.round(cardHeight * 0.28), backgroundColor: "var(--surface-deep)", border: "1px solid var(--border)" }}>
           <span className="wordmark text-2xl font-bold" style={{ color: "var(--accent)" }}>gists</span>
           <span className="ml-2 text-sm" style={{ color: "var(--text-muted)" }}>for Business</span>
         </div>
@@ -138,7 +139,7 @@ function MorningGistsBanner({ cardHeight, onDismiss }: { cardHeight: number; onD
           href="/digest"
           onClick={() => { markDigestSeen(); onDismiss(); }}
           className="px-6 py-2.5 rounded-full text-sm font-semibold transition-all hover:opacity-90"
-          style={{ backgroundColor: "var(--accent)", color: "#000" }}
+          style={{ backgroundColor: "var(--accent)", color: "var(--accent-on)" }}
         >
           Read today&apos;s gists →
         </Link>
@@ -442,6 +443,8 @@ export default function FeedPage() {
                 <line x1="16" y1="17" x2="8" y2="17" />
               </svg>
             </Link>
+
+            <ThemeToggle />
 
             {user ? (
               <div className="flex items-center gap-2">

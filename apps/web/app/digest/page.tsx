@@ -3,13 +3,14 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { api, Article, DigestResponse } from "@/lib/api";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const CATEGORY_COLORS: Record<string, string> = {
-  TECH: "#60a5fa",
-  FINANCE: "#34d399",
-  POLITICS: "#f87171",
-  CULTURE: "#c084fc",
-  SPORTS: "#fb923c",
+  TECH: "var(--category-tech)",
+  FINANCE: "var(--category-finance)",
+  POLITICS: "var(--category-politics)",
+  CULTURE: "var(--category-culture)",
+  SPORTS: "var(--category-sports)",
 };
 
 function formatDate(iso: string): string {
@@ -206,7 +207,7 @@ export default function DigestPage() {
           <Link
             href="/feed"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-semibold transition-all hover:opacity-90"
-            style={{ backgroundColor: "var(--accent)", color: "#000" }}
+            style={{ backgroundColor: "var(--accent)", color: "var(--accent-on)" }}
           >
             Open the full feed →
           </Link>
@@ -220,12 +221,13 @@ function DigestNav() {
   return (
     <nav
       className="flex items-center justify-between px-6 py-4 sticky top-0 z-10"
-      style={{ borderBottom: "1px solid var(--border)", backgroundColor: "rgba(0,0,0,0.85)", backdropFilter: "blur(12px)" }}
+      style={{ borderBottom: "1px solid var(--border)", backgroundColor: "var(--nav-bg)", backdropFilter: "blur(12px)" }}
     >
       <Link href="/feed" className="wordmark text-xl font-bold" style={{ color: "var(--text-primary)" }}>
         gists
       </Link>
       <div className="flex items-center gap-3">
+        <ThemeToggle />
         <Link
           href="/feed"
           className="text-sm px-4 py-2 rounded-full transition-colors"
@@ -239,7 +241,7 @@ function DigestNav() {
 }
 
 function DigestArticle({ article, rank }: { article: Article; rank: number }) {
-  const catColor = CATEGORY_COLORS[article.category] ?? "#60a5fa";
+  const catColor = CATEGORY_COLORS[article.category] ?? "var(--category-tech)";
   const bullets = article.summary.split("\n").filter(Boolean);
 
   return (
