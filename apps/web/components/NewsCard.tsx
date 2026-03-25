@@ -8,6 +8,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   FINANCE: "#34d399",
   POLITICS: "#f87171",
   CULTURE: "#c084fc",
+  SPORTS: "#fb923c",
 };
 
 function formatTimeAgo(date: Date): string {
@@ -126,7 +127,7 @@ export function NewsCard({ article, userId, email, username, isBookmarked = fals
 
       {/* Content */}
       <div className="flex-1 flex flex-col px-5 pb-4 gap-3 overflow-hidden">
-        {article.imageUrl && (
+        {article.imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={article.imageUrl}
@@ -134,6 +135,13 @@ export function NewsCard({ article, userId, email, username, isBookmarked = fals
             className="w-full rounded-lg object-cover shrink-0"
             style={{ height: imageHeight, backgroundColor: "var(--surface)" }}
           />
+        ) : (
+          <div
+            className="w-full rounded-lg shrink-0 flex items-center justify-center"
+            style={{ height: imageHeight, backgroundColor: "#0a0a0a", border: "1px solid var(--border)" }}
+          >
+            <span className="wordmark font-bold" style={{ color: "var(--border)", fontSize: 22 }}>tl;dr</span>
+          </div>
         )}
 
         <h2 className="font-bold leading-tight shrink-0" style={{ fontSize: 20, color: "var(--text-primary)" }}>

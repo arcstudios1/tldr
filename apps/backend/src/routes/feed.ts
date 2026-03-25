@@ -35,7 +35,6 @@ router.get("/", async (req: Request, res: Response) => {
   const articles = await prisma.article.findMany({
     where: {
       isAd: false,
-      imageUrl: { not: null },
       // Category bar selection takes priority; fall back to user prefs
       ...(category
         ? { category }

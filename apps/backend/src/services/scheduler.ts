@@ -7,6 +7,7 @@ import { fetchNYTimes } from "./nytimes";
 import { fetchGNews } from "./gnews";
 import { summarizeArticle } from "./summarizer";
 import { updateFeedScores } from "./scorer";
+import { enrichMissingImages } from "./imageEnricher";
 
 const STOP_WORDS = new Set([
   "a", "an", "the", "in", "on", "at", "to", "for", "of", "and", "or", "but",
@@ -107,7 +108,6 @@ export async function runPipeline(): Promise<void> {
       });
 
       if (existing) { skipped++; continue; }
-      if (!article.imageUrl) { skipped++; continue; }
 
       const { headline, summary } = await summarizeArticle(
         article.title,
@@ -146,6 +146,11 @@ export async function runPipeline(): Promise<void> {
   // Run scorer immediately after ingestion so new articles have a score
   await updateFeedScores().catch((err) =>
     console.error("[Pipeline] Scorer error:", err)
+  );
+
+  // Backfill og:image for top-scored articles that arrived without one
+  await enrichMissingImages().catch((err) =>
+    console.error("[Pipeline] ImageEnricher error:", err)
   );
 }
 
