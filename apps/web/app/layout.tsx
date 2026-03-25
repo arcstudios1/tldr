@@ -13,11 +13,11 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "tl;dr — The news. In seconds.",
-  description: "Curated news summaries across tech, finance, politics, and culture. Read the stories that matter in under 9 seconds.",
+  title: "Gists — The news. In seconds.",
+  description: "Curated news summaries across tech, finance, politics, culture, and sports. The stories that matter, distilled to their essentials.",
   openGraph: {
-    title: "tl;dr — The news. In seconds.",
-    description: "Curated news summaries across tech, finance, politics, and culture.",
+    title: "Gists — The news. In seconds.",
+    description: "Curated news summaries across tech, finance, politics, culture, and sports.",
     type: "website",
   },
 };

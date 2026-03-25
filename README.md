@@ -1,8 +1,8 @@
-# tl;dr
+# Gists
 
 > The news. In seconds.
 
-A TikTok-style news app delivering AI-generated 9-second reads across Tech, Finance, Politics, and Culture.
+A modern news aggregation platform delivering curated, multi-source summaries across Tech, Finance, Politics, Culture, and Sports.
 
 ---
 

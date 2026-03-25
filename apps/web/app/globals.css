@@ -260,6 +260,38 @@ body {
   }
 }
 
+/* Vote pulse animation */
+@keyframes vote-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+/* Bookmark fill animation */
+@keyframes bookmark-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+
+/* Comment slide-in */
+@keyframes comment-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.vote-pulse {
+  animation: vote-pulse 0.25s ease;
+}
+
+.bookmark-pop {
+  animation: bookmark-pop 0.3s ease;
+}
+
+.comment-in {
+  animation: comment-in 0.2s ease both;
+}
+
 /* Small screens: tighter feed header */
 @media (max-width: 640px) {
   .feed-container {

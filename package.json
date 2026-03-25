@@ -1,5 +1,5 @@
 {
-  "name": "tldr",
+  "name": "gists",
   "private": true,
   "workspaces": [
     "apps/*"

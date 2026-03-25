@@ -115,7 +115,7 @@ export default function ProfilePage() {
         <Link href="/feed" className="text-sm flex items-center gap-1.5" style={{ color: "var(--text-secondary)" }}>
           ← Feed
         </Link>
-        <span className="wordmark text-xl font-bold" style={{ color: "var(--text-primary)" }}>tl;dr</span>
+        <span className="wordmark text-xl font-bold" style={{ color: "var(--text-primary)" }}>gists</span>
         <div style={{ width: 48 }} />
       </div>
 

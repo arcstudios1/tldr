@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { api, Article, Category, FeedSort } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
-import { NewsCard, SkeletonCard } from "@/components/NewsCard";
+import { Gist, GistSkeleton } from "@/components/Gist";
 import { CategoryBar, TabValue } from "@/components/CategoryBar";
 import { LeftPanel } from "@/components/LeftPanel";
 import { RightPanel } from "@/components/RightPanel";
@@ -12,7 +12,7 @@ import { SearchOverlay } from "@/components/SearchOverlay";
 import type { User } from "@supabase/supabase-js";
 
 const AD_INTERVAL = 6;
-const READ_STORAGE_KEY = "tldr-read-articles";
+const READ_STORAGE_KEY = "gists-read";
 
 function getReadArticles(): Set<string> {
   if (typeof window === "undefined") return new Set();
@@ -35,7 +35,24 @@ function markAsRead(articleId: string) {
   } catch { /* ignore quota errors */ }
 }
 
-type FeedItem = Article | { type: "ad"; id: string };
+type FeedItem = Article | { type: "ad"; id: string } | { type: "morning-gists"; id: string };
+
+const DIGEST_SEEN_KEY = "gists-digest-seen";
+
+function hasSeenDigestToday(): boolean {
+  if (typeof window === "undefined") return true;
+  try {
+    const val = localStorage.getItem(DIGEST_SEEN_KEY);
+    if (!val) return false;
+    const today = new Date().toDateString();
+    return val === today;
+  } catch { return false; }
+}
+
+function markDigestSeen() {
+  if (typeof window === "undefined") return;
+  try { localStorage.setItem(DIGEST_SEEN_KEY, new Date().toDateString()); } catch {}
+}
 
 function injectAds(articles: Article[]): FeedItem[] {
   const result: FeedItem[] = [];
@@ -58,11 +75,11 @@ function AdCard({ cardHeight }: { cardHeight: number }) {
         <span className="text-xs font-semibold tracking-wide px-1.5 py-0.5 rounded border" style={{ color: "var(--text-muted)", borderColor: "var(--border)" }}>
           SPONSORED
         </span>
-        <span className="text-sm flex-1" style={{ color: "var(--text-secondary)" }}>tl;dr for Business</span>
+        <span className="text-sm flex-1" style={{ color: "var(--text-secondary)" }}>Gists for Business</span>
       </div>
       <div className="flex-1 flex flex-col px-5 pb-4 gap-3">
         <div className="w-full rounded-lg flex items-center justify-center shrink-0" style={{ height: Math.round(cardHeight * 0.28), backgroundColor: "#0a0a0a", border: "1px solid var(--border)" }}>
-          <span className="wordmark text-2xl font-bold" style={{ color: "var(--accent)" }}>tl;dr</span>
+          <span className="wordmark text-2xl font-bold" style={{ color: "var(--accent)" }}>gists</span>
           <span className="ml-2 text-sm" style={{ color: "var(--text-muted)" }}>for Business</span>
         </div>
         <h2 className="font-bold leading-tight" style={{ fontSize: 20, color: "var(--text-primary)" }}>
@@ -71,8 +88,8 @@ function AdCard({ cardHeight }: { cardHeight: number }) {
         <div className="flex gap-2">
           <div className="summary-bar" />
           <div className="flex flex-col gap-1">
-            <span className="wordmark text-xs tracking-wide" style={{ color: "var(--accent)", fontSize: 11 }}>tl;dr</span>
-            {["tl;dr serves daily news to thousands of professionals.", "Native placements look and feel like trusted content.", "No banner blindness. Just your message in context."].map((b, i) => (
+            <span className="wordmark text-xs tracking-wide" style={{ color: "var(--accent)", fontSize: 11 }}>the gist</span>
+            {["Gists serves daily news to thousands of professionals.", "Native placements look and feel like trusted content.", "No banner blindness. Just your message in context."].map((b, i) => (
               <div key={i} className="flex gap-1.5 items-start">
                 <span className="shrink-0 mt-1.5" style={{ color: "var(--accent)", fontSize: 6 }}>●</span>
                 <p className="text-sm" style={{ color: "var(--text-primary)" }}>{b}</p>
@@ -80,10 +97,56 @@ function AdCard({ cardHeight }: { cardHeight: number }) {
             ))}
           </div>
         </div>
-        <a href="mailto:advertise@tldr.app" className="text-sm hover:underline" style={{ color: "var(--accent)" }}>
-          Advertise on tl;dr →
+        <a href="mailto:advertise@gists.news" className="text-sm hover:underline" style={{ color: "var(--accent)" }}>
+          Advertise on Gists →
         </a>
         <p className="text-xs" style={{ color: "var(--text-muted)" }}>Sponsored content</p>
+      </div>
+    </div>
+  );
+}
+
+function MorningGistsBanner({ cardHeight, onDismiss }: { cardHeight: number; onDismiss: () => void }) {
+  return (
+    <div
+      className="feed-card flex flex-col items-center justify-center gap-5"
+      style={{ height: cardHeight, backgroundColor: "var(--bg)", borderBottom: "1px solid var(--border)" }}
+    >
+      <div
+        className="w-14 h-14 rounded-2xl flex items-center justify-center"
+        style={{ backgroundColor: "var(--accent-dim)", border: "2px solid var(--accent)" }}
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--accent)" }}>
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+          <line x1="16" y1="13" x2="8" y2="13" />
+          <line x1="16" y1="17" x2="8" y2="17" />
+        </svg>
+      </div>
+      <div className="text-center px-6">
+        <h2 className="text-xl font-bold mb-2" style={{ color: "var(--text-primary)" }}>
+          Morning Gists
+        </h2>
+        <p className="text-sm max-w-xs mx-auto" style={{ color: "var(--text-muted)", lineHeight: 1.6 }}>
+          Today&apos;s top stories, ranked by importance — your daily briefing in under two minutes.
+        </p>
+      </div>
+      <div className="flex items-center gap-3">
+        <Link
+          href="/digest"
+          onClick={() => { markDigestSeen(); onDismiss(); }}
+          className="px-6 py-2.5 rounded-full text-sm font-semibold transition-all hover:opacity-90"
+          style={{ backgroundColor: "var(--accent)", color: "#000" }}
+        >
+          Read today&apos;s gists →
+        </Link>
+        <button
+          onClick={() => { markDigestSeen(); onDismiss(); }}
+          className="text-xs px-4 py-2.5 rounded-full"
+          style={{ color: "var(--text-muted)", border: "1px solid var(--border)" }}
+        >
+          Skip
+        </button>
       </div>
     </div>
   );
@@ -104,15 +167,17 @@ export default function FeedPage() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [activeCardIndex, setActiveCardIndex] = useState(0);
   const [readIds, setReadIds] = useState<Set<string>>(new Set());
+  const [showDigestBanner, setShowDigestBanner] = useState(false);
   const feedRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
 
   const isSavedView = selectedTab === "SAVED";
   const selectedCategory = isSavedView ? null : (selectedTab as Category | null);
 
-  // Load read history from localStorage
+  // Load read history + check digest banner
   useEffect(() => {
     setReadIds(getReadArticles());
+    setShowDigestBanner(!hasSeenDigestToday());
   }, []);
 
   // Auth
@@ -176,7 +241,14 @@ export default function FeedPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTab, user, feedSort]);
 
-  const feedItems: FeedItem[] = isSavedView ? bookmarks : injectAds(articles);
+  const feedItems: FeedItem[] = useMemo(() => {
+    if (isSavedView) return bookmarks;
+    const items = injectAds(articles);
+    if (showDigestBanner) {
+      items.unshift({ type: "morning-gists", id: "morning-gists-banner" });
+    }
+    return items;
+  }, [isSavedView, bookmarks, articles, showDigestBanner]);
 
   // Mark active article as read after 1.5s of viewing — must be after feedItems declaration
   useEffect(() => {
@@ -322,7 +394,7 @@ export default function FeedPage() {
           style={{ borderBottom: "1px solid var(--border)" }}
         >
           <Link href="/" className="wordmark text-xl font-bold" style={{ color: "var(--text-primary)" }}>
-            tl;dr
+            gists
           </Link>
           <div className="flex items-center gap-2">
             {/* Search button */}
@@ -343,7 +415,7 @@ export default function FeedPage() {
               href="/digest"
               className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
               style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)", color: "var(--text-muted)" }}
-              title="Daily Digest"
+              title="Morning Gists"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -383,9 +455,9 @@ export default function FeedPage() {
         {loading ? (
           cardHeight > 0 ? (
             <>
-              <SkeletonCard cardHeight={cardHeight} />
-              <SkeletonCard cardHeight={cardHeight} />
-              <SkeletonCard cardHeight={cardHeight} />
+              <GistSkeleton cardHeight={cardHeight} />
+              <GistSkeleton cardHeight={cardHeight} />
+              <GistSkeleton cardHeight={cardHeight} />
             </>
           ) : (
             <div className="h-full flex items-center justify-center">
@@ -404,18 +476,20 @@ export default function FeedPage() {
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--text-muted)" }}>
               <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
             </svg>
-            <p className="font-medium" style={{ color: "var(--text-secondary)" }}>No saved articles yet</p>
+            <p className="font-medium" style={{ color: "var(--text-secondary)" }}>No saved gists yet</p>
             <p className="text-sm text-center px-8" style={{ color: "var(--text-muted)" }}>
-              Bookmark articles from the feed and they&apos;ll appear here.
+              Bookmark gists from the feed and they&apos;ll appear here.
             </p>
           </div>
         ) : (
           <>
             {cardHeight > 0 && feedItems.map((item, idx) => (
-              "type" in item && item.type === "ad" ? (
+              "type" in item && item.type === "morning-gists" ? (
+                <MorningGistsBanner key={item.id} cardHeight={cardHeight} onDismiss={() => setShowDigestBanner(false)} />
+              ) : "type" in item && item.type === "ad" ? (
                 <AdCard key={item.id} cardHeight={cardHeight} />
               ) : (
-                <NewsCard
+                <Gist
                   key={(item as Article).id}
                   article={item as Article}
                   userId={user?.id ?? null}
@@ -461,6 +535,7 @@ export default function FeedPage() {
             setSearchOpen(false);
             window.open(article.sourceUrl, "_blank");
           }}
+          isAuthenticated={!!user}
         />
       )}
     </div>

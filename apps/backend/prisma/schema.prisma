@@ -30,22 +30,34 @@ model UserPreference {
 }
 
 model Article {
-  id              String    @id @default(cuid())
+  id              String       @id @default(cuid())
   title           String
   summary         String
   imageUrl        String?
-  sourceUrl       String    @unique
+  sourceUrl       String       @unique
   sourceName      String
   category        Category
   publishedAt     DateTime
-  createdAt       DateTime  @default(now())
-  isAd            Boolean   @default(false)
-  sourceCount     Int       @default(1)
-  importanceScore Int       @default(5)
-  feedScore       Float     @default(0)
+  createdAt       DateTime     @default(now())
+  isAd            Boolean      @default(false)
+  sourceCount     Int          @default(1)
+  importanceScore Int          @default(5)
+  feedScore       Float        @default(0)
   votes           Vote[]
   comments        Comment[]
   bookmarks       Bookmark[]
+  sources         GistSource[]
+}
+
+model GistSource {
+  id         String  @id @default(cuid())
+  articleId  String
+  sourceName String
+  sourceUrl  String
+  imageUrl   String?
+  article    Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([articleId])
 }
 
 model Vote {

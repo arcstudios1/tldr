@@ -57,7 +57,7 @@ export function LeftPanel({ articles, selected, onSelect }: Props) {
       {/* Wordmark + tagline */}
       <div>
         <div className="wordmark text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
-          tl;dr
+          gists
         </div>
         <div className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
           The news. In seconds.
@@ -71,7 +71,7 @@ export function LeftPanel({ articles, selected, onSelect }: Props) {
           style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs" style={{ color: "var(--text-muted)" }}>Stories</span>
+            <span className="text-xs" style={{ color: "var(--text-muted)" }}>Gists</span>
             <span className="text-xs font-semibold tabular-nums" style={{ color: "var(--text-primary)" }}>{total}</span>
           </div>
           <div className="flex items-center justify-between">
@@ -93,7 +93,7 @@ export function LeftPanel({ articles, selected, onSelect }: Props) {
           className="text-xs font-semibold tracking-widest mb-4"
           style={{ color: "var(--text-muted)" }}
         >
-          TODAY&apos;S STORIES
+          TODAY&apos;S GISTS
         </div>
         <div className="flex flex-col gap-4">
           {CATEGORY_CONFIG.map((cat) => {
@@ -152,7 +152,7 @@ export function LeftPanel({ articles, selected, onSelect }: Props) {
             <line x1="16" y1="13" x2="8" y2="13" />
             <line x1="16" y1="17" x2="8" y2="17" />
           </svg>
-          Daily Digest
+          Morning Gists
         </Link>
       </div>
 

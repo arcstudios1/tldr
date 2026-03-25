@@ -39,7 +39,7 @@ function titlesAreSimilar(a: string, b: string): boolean {
 
 function groupByTopic(
   articles: RawArticle[]
-): Array<{ article: RawArticle; sourceCount: number }> {
+): Array<{ article: RawArticle; sourceCount: number; allSources: RawArticle[] }> {
   const groups: Array<{ articles: RawArticle[] }> = [];
 
   for (const article of articles) {
@@ -60,6 +60,7 @@ function groupByTopic(
     .map((g) => ({
       article: g.articles[0],
       sourceCount: g.articles.length,
+      allSources: g.articles,
     }))
     .sort((a, b) => b.sourceCount - a.sourceCount);
 }
@@ -101,7 +102,7 @@ export async function runPipeline(): Promise<void> {
   let skipped = 0;
   let failed = 0;
 
-  for (const { article, sourceCount } of grouped) {
+  for (const { article, sourceCount, allSources } of grouped) {
     try {
       const existing = await prisma.article.findUnique({
         where: { sourceUrl: article.sourceUrl },
@@ -114,7 +115,7 @@ export async function runPipeline(): Promise<void> {
         article.content
       );
 
-      await prisma.article.create({
+      const createdArticle = await prisma.article.create({
         data: {
           title: headline,
           summary,
@@ -125,9 +126,20 @@ export async function runPipeline(): Promise<void> {
           publishedAt: article.publishedAt,
           sourceCount,
           importanceScore: article.importanceScore ?? 5,
-          feedScore: 0, // scorer will populate within 30 minutes
+          feedScore: 0,
         },
       });
+
+      if (allSources.length > 1) {
+        await prisma.gistSource.createMany({
+          data: allSources.map((src) => ({
+            articleId: createdArticle.id,
+            sourceName: src.sourceName,
+            sourceUrl: src.sourceUrl,
+            imageUrl: src.imageUrl ?? null,
+          })),
+        });
+      }
 
       created++;
       if (sourceCount > 1) {

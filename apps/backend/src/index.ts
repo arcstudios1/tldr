@@ -8,6 +8,7 @@ import votesRouter from "./routes/votes";
 import commentsRouter from "./routes/comments";
 import preferencesRouter from "./routes/preferences";
 import bookmarksRouter from "./routes/bookmarks";
+import sourcesRouter from "./routes/sources";
 import { feedLimiter, writeLimiter } from "./middleware/rateLimiter";
 import { startScheduler, runPipeline } from "./services/scheduler";
 
@@ -30,10 +31,11 @@ app.use("/search", feedLimiter, searchRouter);
 app.use("/digest", feedLimiter, digestRouter);
 app.use("/articles", writeLimiter, votesRouter);
 app.use("/articles", writeLimiter, commentsRouter);
+app.use("/articles", feedLimiter, sourcesRouter);
 app.use("/users", writeLimiter, preferencesRouter);
 app.use("/users", writeLimiter, bookmarksRouter);
 
 app.listen(PORT, () => {
-  console.log(`[Server] tl;dr backend running on port ${PORT}`);
+  console.log(`[Server] Gists backend running on port ${PORT}`);
   startScheduler();
 });

@@ -92,7 +92,7 @@ export default function DigestPage() {
             </div>
             <div>
               <h1 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
-                Daily Digest
+                Morning Gists
               </h1>
               <p className="text-sm" style={{ color: "var(--text-muted)" }}>
                 {formatDate(digest.date)}
@@ -106,7 +106,7 @@ export default function DigestPage() {
             style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
           >
             <div className="flex items-center gap-2">
-              <span className="text-xs" style={{ color: "var(--text-muted)" }}>Stories today</span>
+              <span className="text-xs" style={{ color: "var(--text-muted)" }}>Gists today</span>
               <span className="text-sm font-semibold tabular-nums" style={{ color: "var(--text-primary)" }}>
                 {digest.stats.totalArticles}
               </span>
@@ -179,7 +179,7 @@ export default function DigestPage() {
                   <div className="flex gap-2">
                     <div className="summary-bar" />
                     <div className="flex flex-col gap-1.5">
-                      <span className="wordmark text-xs" style={{ color: "var(--accent)" }}>tl;dr</span>
+                      <span className="wordmark text-xs" style={{ color: "var(--accent)" }}>the gist</span>
                       {heroArticle.summary.split("\n").filter(Boolean).map((point, i) => (
                         <div key={i} className="flex gap-1.5 items-start">
                           <span className="shrink-0 mt-1.5" style={{ color: "var(--accent)", fontSize: 6 }}>●</span>
@@ -223,7 +223,7 @@ function DigestNav() {
       style={{ borderBottom: "1px solid var(--border)", backgroundColor: "rgba(0,0,0,0.85)", backdropFilter: "blur(12px)" }}
     >
       <Link href="/feed" className="wordmark text-xl font-bold" style={{ color: "var(--text-primary)" }}>
-        tl;dr
+        gists
       </Link>
       <div className="flex items-center gap-3">
         <Link

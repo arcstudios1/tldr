@@ -21,7 +21,7 @@ const MAX_POSTS = 10;
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
 
 const parser = new Parser({
-  headers: { "User-Agent": "tldr-news-bot/1.0" },
+  headers: { "User-Agent": "gists-news-bot/1.0" },
   customFields: { item: ["media:thumbnail"] },
 });
 

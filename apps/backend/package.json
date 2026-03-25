@@ -1,5 +1,5 @@
 {
-  "name": "@tldr/backend",
+  "name": "@gists/backend",
   "version": "1.0.0",
   "private": true,
   "scripts": {

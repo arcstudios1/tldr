@@ -101,7 +101,7 @@ export default function OnboardingCategoriesPage() {
         {/* Header */}
         <div className="text-center">
           <p className="wordmark text-2xl font-bold mb-6" style={{ color: "var(--text-primary)" }}>
-            tl;dr
+            gists
           </p>
           <h1 className="text-2xl font-bold mb-2" style={{ color: "var(--text-primary)" }}>
             What do you want to follow?

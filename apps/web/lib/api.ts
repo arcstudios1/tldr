@@ -47,6 +47,19 @@ export interface DigestResponse {
   };
 }
 
+export interface GistSource {
+  id: string;
+  sourceName: string;
+  sourceUrl: string;
+  imageUrl: string | null;
+}
+
+export interface SourcesResponse {
+  articleId: string;
+  sourceCount: number;
+  sources: GistSource[];
+}
+
 export interface Comment {
   id: string;
   body: string;
@@ -114,6 +127,9 @@ export const api = {
 
   getDigest: (): Promise<DigestResponse> =>
     request<DigestResponse>("/digest"),
+
+  getSources: (articleId: string): Promise<SourcesResponse> =>
+    request<SourcesResponse>(`/articles/${articleId}/sources`),
 
   vote: (articleId: string, userId: string, email: string, username: string, value: 1 | -1 | 0) =>
     request<{ upvotes: number; downvotes: number; userVote: number }>(

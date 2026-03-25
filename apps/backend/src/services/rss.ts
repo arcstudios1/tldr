@@ -14,7 +14,7 @@ type CustomItem = {
 
 const parser = new Parser<Record<string, never>, CustomItem>({
   timeout: 10000,
-  headers: { "User-Agent": "tldr-news-bot/1.0" },
+  headers: { "User-Agent": "gists-news-bot/1.0" },
   customFields: {
     item: [
       ["media:content", "media:content"],

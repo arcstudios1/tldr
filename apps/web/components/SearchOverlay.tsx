@@ -24,9 +24,10 @@ function formatTimeAgo(date: Date): string {
 interface Props {
   onClose: () => void;
   onSelectArticle?: (article: Article) => void;
+  isAuthenticated?: boolean;
 }
 
-export function SearchOverlay({ onClose, onSelectArticle }: Props) {
+export function SearchOverlay({ onClose, onSelectArticle, isAuthenticated = false }: Props) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Article[]>([]);
   const [loading, setLoading] = useState(false);
@@ -90,7 +91,7 @@ export function SearchOverlay({ onClose, onSelectArticle }: Props) {
             type="text"
             value={query}
             onChange={(e) => handleChange(e.target.value)}
-            placeholder="Search articles, topics, sources…"
+            placeholder="Search gists, topics, sources…"
             className="flex-1 bg-transparent text-lg outline-none"
             style={{ color: "var(--text-primary)" }}
           />
@@ -117,7 +118,7 @@ export function SearchOverlay({ onClose, onSelectArticle }: Props) {
           ) : !searched ? (
             <div className="text-center py-12">
               <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-                Type to search across all articles
+                Type to search across all gists
               </p>
               <div className="flex items-center justify-center gap-4 mt-4">
                 <div className="flex items-center gap-1.5 text-xs" style={{ color: "var(--text-muted)" }}>
@@ -145,7 +146,7 @@ export function SearchOverlay({ onClose, onSelectArticle }: Props) {
               <p className="text-xs mb-4" style={{ color: "var(--text-muted)" }}>
                 {results.length} result{results.length !== 1 ? "s" : ""}
               </p>
-              {results.map((article) => {
+              {(isAuthenticated ? results : results.slice(0, 2)).map((article) => {
                 const catColor = CATEGORY_COLORS[article.category] ?? "#60a5fa";
                 return (
                   <button
@@ -169,7 +170,7 @@ export function SearchOverlay({ onClose, onSelectArticle }: Props) {
                         className="w-16 h-16 rounded-lg shrink-0 flex items-center justify-center"
                         style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
                       >
-                        <span className="wordmark text-xs" style={{ color: "var(--border)" }}>tl;dr</span>
+                        <span className="wordmark text-xs" style={{ color: "var(--border)" }}>gists</span>
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
@@ -197,6 +198,24 @@ export function SearchOverlay({ onClose, onSelectArticle }: Props) {
                   </button>
                 );
               })}
+
+              {!isAuthenticated && results.length > 2 && (
+                <div className="mt-4 text-center py-8 px-6 rounded-xl" style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}>
+                  <p className="text-sm font-medium mb-2" style={{ color: "var(--text-primary)" }}>
+                    Sign in to see all {results.length} results
+                  </p>
+                  <p className="text-xs mb-4" style={{ color: "var(--text-muted)" }}>
+                    Create a free account to unlock full search across every gist.
+                  </p>
+                  <a
+                    href="/sign-up"
+                    className="inline-block px-5 py-2 rounded-full text-sm font-semibold"
+                    style={{ backgroundColor: "var(--accent)", color: "#000" }}
+                  >
+                    Create free account
+                  </a>
+                </div>
+              )}
             </div>
           )}
         </div>

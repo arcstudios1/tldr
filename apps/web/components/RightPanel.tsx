@@ -35,7 +35,7 @@ export function RightPanel({ trendingArticles, onScrollToArticle }: Props) {
         className="text-xs font-semibold tracking-widest mb-4"
         style={{ color: "var(--text-muted)" }}
       >
-        TRENDING TODAY
+        TRENDING GISTS
       </div>
 
       {trendingArticles.length === 0 ? (
@@ -114,10 +114,10 @@ export function RightPanel({ trendingArticles, onScrollToArticle }: Props) {
         </div>
         <div className="flex flex-col gap-2">
           {[
-            { keys: ["j", "k"], label: "Navigate articles" },
+            { keys: ["j", "k"], label: "Navigate gists" },
             { keys: ["/"], label: "Search" },
             { keys: ["b"], label: "Bookmark" },
-            { keys: ["o"], label: "Open article" },
+            { keys: ["o"], label: "Open source" },
           ].map((shortcut) => (
             <div key={shortcut.label} className="flex items-center justify-between">
               <span className="text-xs" style={{ color: "var(--text-muted)" }}>{shortcut.label}</span>

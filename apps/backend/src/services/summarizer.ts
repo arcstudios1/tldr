@@ -2,7 +2,7 @@ import OpenAI from "openai";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-const SYSTEM_PROMPT = `You are a news editor for tl;dr, a mobile app that delivers sharp, scannable news in under 9 seconds.
+const SYSTEM_PROMPT = `You are a news editor for Gists, a news platform that delivers sharp, scannable summaries of the stories that matter.
 
 Given an article title and content, return a JSON object with exactly two fields:
 

@@ -104,7 +104,7 @@ const FEATURES: { icon: React.ReactNode; title: string; desc: string }[] = [
         <line x1="16" y1="17" x2="8" y2="17" />
       </svg>
     ),
-    title: "Daily digest",
+    title: "Morning Gists",
     desc: "Today's most important stories, ranked and ready. One page, every morning — your briefing in under two minutes.",
   },
   {
@@ -138,7 +138,7 @@ function ArticleCard() {
       style={{ border: "1px solid var(--border)", backgroundColor: "var(--surface)" }}
     >
       <div className="w-full h-44 flex items-center justify-center" style={{ backgroundColor: "#0a0a0a" }}>
-        <span className="wordmark text-2xl font-bold" style={{ color: "var(--border)" }}>tl;dr</span>
+        <span className="wordmark text-2xl font-bold" style={{ color: "var(--border)" }}>gists</span>
       </div>
       <div className="p-5">
         {/* Meta row — with new source badge + freshness tag */}
@@ -163,7 +163,7 @@ function ArticleCard() {
         <div className="flex gap-2 mb-4">
           <div className="summary-bar" />
           <div>
-            <p className="text-xs mb-1 wordmark" style={{ color: "var(--accent)" }}>tl;dr</p>
+            <p className="text-xs mb-1 wordmark" style={{ color: "var(--accent)" }}>the gist</p>
             {CARD_BULLETS.map((b, i) => (
               <div key={i} className="flex gap-1.5 items-start mb-1">
                 <span className="mt-1.5 shrink-0" style={{ color: "var(--accent)", fontSize: 6 }}>●</span>
@@ -220,7 +220,7 @@ export default function LandingPage() {
         className="flex items-center justify-between px-6 py-4 sticky top-0 z-10"
         style={{ borderBottom: "1px solid var(--border)", backgroundColor: "rgba(0,0,0,0.85)", backdropFilter: "blur(12px)" }}
       >
-        <span className="wordmark text-xl font-bold">tl;dr</span>
+        <span className="wordmark text-xl font-bold">gists</span>
         <div className="flex items-center gap-3">
           <Link
             href="/sign-in"
@@ -256,7 +256,7 @@ export default function LandingPage() {
           </div>
 
           <h1 className="wordmark font-bold mb-4 leading-none" style={{ fontSize: "clamp(3.5rem, 10vw, 7rem)", color: "var(--text-primary)" }}>
-            tl;dr
+            gists
           </h1>
 
           <p className="text-xl mb-3 font-medium" style={{ color: "var(--text-secondary)" }}>
@@ -414,7 +414,7 @@ export default function LandingPage() {
         className="text-center py-6 text-xs"
         style={{ borderTop: "1px solid var(--border)", color: "var(--text-muted)" }}
       >
-        <span className="wordmark mr-2">tl;dr</span> © {new Date().getFullYear()} · All rights reserved
+        <span className="wordmark mr-2">gists</span> © {new Date().getFullYear()} · All rights reserved
       </footer>
 
     </main>

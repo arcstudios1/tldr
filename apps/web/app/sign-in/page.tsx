@@ -28,7 +28,7 @@ export default function SignInPage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6" style={{ backgroundColor: "var(--bg)" }}>
       <Link href="/" className="wordmark text-2xl font-bold mb-10" style={{ color: "var(--text-primary)" }}>
-        tl;dr
+        gists
       </Link>
 
       <div className="w-full max-w-sm">

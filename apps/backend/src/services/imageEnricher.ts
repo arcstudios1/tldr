@@ -13,7 +13,7 @@ async function fetchOgImage(sourceUrl: string): Promise<string | null> {
     const res = await fetch(sourceUrl, {
       signal: controller.signal,
       headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; tldr-bot/1.0; +https://tldr.app)",
+        "User-Agent": "Mozilla/5.0 (compatible; gists-bot/1.0; +https://gists.news)",
         "Accept": "text/html,application/xhtml+xml",
       },
       redirect: "follow",
