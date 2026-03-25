@@ -19,7 +19,7 @@ const FEATURES = [
   {
     icon: "🔇",
     title: "No noise",
-    desc: "AI-curated summaries cut through clickbait and give you the signal without the noise.",
+    desc: "Every summary is distilled to what actually matters. Cut through the clickbait and get straight to the point.",
   },
 ];
 
@@ -80,7 +80,7 @@ export default function LandingPage() {
           The news. In seconds.
         </p>
         <p className="text-base max-w-md mb-10" style={{ color: "var(--text-muted)", lineHeight: 1.7 }}>
-          AI-curated summaries of the most important stories across tech, finance, politics, and culture — delivered in a feed built for how you actually read.
+          The most important stories across tech, finance, politics, and culture — distilled to their essentials and delivered in a feed built for how you actually read.
         </p>
 
         {/* Category pills preview */}
@@ -126,18 +126,18 @@ export default function LandingPage() {
           </div>
           <div className="p-5">
             <div className="flex items-center gap-2 mb-3">
-              <span className="text-xs px-1.5 py-0.5 rounded border font-semibold tracking-wide" style={{ color: "#60a5fa", borderColor: "#60a5fa" }}>TECH</span>
-              <span className="text-sm flex-1" style={{ color: "var(--text-secondary)" }}>TechCrunch</span>
+              <span className="text-xs px-1.5 py-0.5 rounded border font-semibold tracking-wide" style={{ color: "#34d399", borderColor: "#34d399" }}>FINANCE</span>
+              <span className="text-sm flex-1" style={{ color: "var(--text-secondary)" }}>WSJ Markets</span>
               <span className="text-xs" style={{ color: "var(--text-muted)" }}>just now</span>
             </div>
             <h3 className="font-bold text-lg mb-3" style={{ color: "var(--text-primary)" }}>
-              AI Reshapes the Modern Newsroom
+              Fed Holds Rates Amid Market Uncertainty
             </h3>
             <div className="flex gap-2 mb-4">
               <div className="summary-bar" />
               <div>
                 <p className="text-xs mb-1 wordmark" style={{ color: "var(--accent)" }}>tl;dr</p>
-                {["Major publishers adopt AI tools for faster story delivery.", "Journalists focus on investigation while AI handles summaries.", "Reader engagement up 40% on AI-assisted platforms."].map((b, i) => (
+                {["Federal Reserve holds rates steady for the third consecutive meeting.", "Officials cite cooling inflation but warn growth remains fragile.", "Markets rally on signals that cuts could come later this year."].map((b, i) => (
                   <div key={i} className="flex gap-1.5 items-start mb-1">
                     <span className="mt-1.5 shrink-0" style={{ color: "var(--accent)", fontSize: 6 }}>●</span>
                     <p className="text-sm" style={{ color: "var(--text-primary)" }}>{b}</p>
