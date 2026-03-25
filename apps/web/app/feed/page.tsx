@@ -77,8 +77,6 @@ export default function FeedPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(false);
   const [cardHeight, setCardHeight] = useState(0);
-  const [activeIdx, setActiveIdx] = useState(0);
-  const [commentsPanelOpen, setCommentsPanelOpen] = useState(false);
   const feedRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
 
@@ -106,25 +104,6 @@ export default function FeedPage() {
     window.addEventListener("resize", measure);
     return () => window.removeEventListener("resize", measure);
   }, []);
-
-  // Track which card is snapped into view
-  useEffect(() => {
-    const el = feedRef.current;
-    if (!el || cardHeight === 0) return;
-    function handleScrollEnd() {
-      if (!el) return;
-      const idx = Math.round(el.scrollTop / cardHeight);
-      setActiveIdx(Math.max(0, idx));
-    }
-    el.addEventListener("scrollend", handleScrollEnd, { passive: true });
-    return () => el.removeEventListener("scrollend", handleScrollEnd);
-  }, [cardHeight]);
-
-  // Lock feed scroll while comments are open
-  useEffect(() => {
-    if (!feedRef.current) return;
-    feedRef.current.style.overflowY = commentsPanelOpen ? "hidden" : "";
-  }, [commentsPanelOpen]);
 
   // Load bookmarks
   useEffect(() => {
@@ -164,10 +143,6 @@ export default function FeedPage() {
   }, [selectedTab, user]);
 
   const feedItems: FeedItem[] = isSavedView ? bookmarks : injectAds(articles);
-
-  // Active article (for right panel)
-  const activeItem = feedItems[activeIdx];
-  const activeArticle = activeItem && !("type" in activeItem) ? (activeItem as Article) : null;
 
   // Top 5 articles by engagement for trending panel
   const trendingArticles = useMemo(
@@ -273,7 +248,6 @@ export default function FeedPage() {
                   username={user?.user_metadata?.username ?? null}
                   isBookmarked={bookmarkedIds.has((item as Article).id)}
                   cardHeight={cardHeight}
-                  onCommentPress={() => setCommentsPanelOpen(true)}
                 />
               )
             ))}
@@ -296,13 +270,7 @@ export default function FeedPage() {
 
       {/* Right panel — desktop only */}
       <RightPanel
-        commentsOpen={commentsPanelOpen}
-        activeArticle={activeArticle}
         trendingArticles={trendingArticles}
-        userId={user?.id ?? null}
-        email={user?.email ?? null}
-        username={user?.user_metadata?.username ?? null}
-        onClose={() => setCommentsPanelOpen(false)}
         onScrollToArticle={scrollToArticle}
       />
 
