@@ -273,6 +273,28 @@ export function Gist({ article, userId, email, username, isBookmarked = false, o
     setShareMenuOpen(false);
   }
 
+  const [storyLoading, setStoryLoading] = useState(false);
+
+  async function handleDownloadStory() {
+    setStoryLoading(true);
+    setShareMenuOpen(false);
+    try {
+      const storyUrl = `/api/story/${article.id}`;
+      const res = await fetch(storyUrl);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `gist-${article.id}.png`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      // silent fail — user can long-press the image instead
+    } finally {
+      setStoryLoading(false);
+    }
+  }
+
   async function handlePost() {
     if (!commentBody.trim() || !userId || posting) return;
     setPosting(true);
@@ -696,6 +718,15 @@ export function Gist({ article, userId, email, username, isBookmarked = false, o
                 <button onClick={handleShareTwitter} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors" style={{ color: "var(--text-primary)" }} onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--bg)")} onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
                   Post on X
+                </button>
+                <button onClick={handleDownloadStory} disabled={storyLoading} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors disabled:opacity-50" style={{ color: "var(--text-primary)" }} onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--bg)")} onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}>
+                  {/* Instagram gradient camera icon */}
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                    <circle cx="12" cy="12" r="4" />
+                    <circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" />
+                  </svg>
+                  {storyLoading ? "Generating…" : "Instagram Story"}
                 </button>
                 <button onClick={handleCopyLink} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors" style={{ color: "var(--text-primary)" }} onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--bg)")} onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg>
