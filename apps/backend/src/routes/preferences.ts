@@ -32,6 +32,11 @@ router.put("/:userId/preferences", async (req: Request, res: Response) => {
   }
 
   const userId = req.params.userId as string;
+  const verifiedId = req.headers["x-verified-user-id"] as string | undefined;
+  if (verifiedId && verifiedId !== userId) {
+    res.status(403).json({ error: "User ID mismatch" });
+    return;
+  }
   const { categories, excludedSources, email, username } = parsed.data;
 
   try {

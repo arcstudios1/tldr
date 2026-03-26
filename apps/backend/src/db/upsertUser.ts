@@ -14,14 +14,23 @@ export async function upsertUser(
   } catch (err: unknown) {
     // Unique constraint violation (P2002): a stale record exists with the same
     // email or username but a different userId (e.g. after account re-creation).
-    // Delete the conflicting record and create a fresh one.
+    // Update the conflicting record's ID to the current userId — preserves all
+    // associated data (votes, comments, bookmarks) instead of silently deleting.
     const code = (err as { code?: string })?.code;
     if (code === "P2002") {
       try {
-        await prisma.user.deleteMany({
+        const existing = await prisma.user.findFirst({
           where: { OR: [{ email }, { username }], NOT: { id: userId } },
+          select: { id: true },
         });
-        await prisma.user.create({ data: { id: userId, email, username } });
+        if (existing) {
+          await prisma.user.update({
+            where: { id: existing.id },
+            data: { id: userId, email, username },
+          });
+        } else {
+          await prisma.user.create({ data: { id: userId, email, username } });
+        }
       } catch {
         // If still failing, silently swallow — the route will surface its own error
       }

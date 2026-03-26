@@ -66,6 +66,11 @@ router.post("/:userId/bookmarks", async (req: Request, res: Response) => {
   }
 
   const userId = req.params.userId as string;
+  const verifiedId = req.headers["x-verified-user-id"] as string | undefined;
+  if (verifiedId && verifiedId !== userId) {
+    res.status(403).json({ error: "User ID mismatch" });
+    return;
+  }
   const { email, username, articleId } = parsed.data;
 
   try {
@@ -86,6 +91,11 @@ router.post("/:userId/bookmarks", async (req: Request, res: Response) => {
 router.delete("/:userId/bookmarks/:articleId", async (req: Request, res: Response) => {
   const userId = req.params.userId as string;
   const articleId = req.params.articleId as string;
+  const verifiedId = req.headers["x-verified-user-id"] as string | undefined;
+  if (verifiedId && verifiedId !== userId) {
+    res.status(403).json({ error: "User ID mismatch" });
+    return;
+  }
   try {
     await prisma.bookmark.deleteMany({ where: { userId, articleId } });
     res.json({ bookmarked: false });

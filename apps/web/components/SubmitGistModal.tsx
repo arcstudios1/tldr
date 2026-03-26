@@ -17,10 +17,11 @@ interface Props {
   userId: string;
   email: string;
   username: string;
+  accessToken?: string;
   onClose: () => void;
 }
 
-export function SubmitGistModal({ userId, email, username, onClose }: Props) {
+export function SubmitGistModal({ userId, email, username, accessToken, onClose }: Props) {
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
   const [category, setCategory] = useState<Category>("TECH");
@@ -54,7 +55,7 @@ export function SubmitGistModal({ userId, email, username, onClose }: Props) {
         url: url.trim(),
         category,
         description: description.trim() || undefined,
-      });
+      }, accessToken);
       setResult(res);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Submission failed";

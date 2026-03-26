@@ -58,6 +58,11 @@ router.post("/:id/comments", async (req: Request, res: Response) => {
     }
 
     const { userId, email, username, body } = parsed.data;
+    const verifiedId = req.headers["x-verified-user-id"] as string | undefined;
+    if (verifiedId && verifiedId !== userId) {
+      res.status(403).json({ error: "User ID mismatch" });
+      return;
+    }
     const articleId = req.params.id as string;
 
     const article = await prisma.article.findUnique({ where: { id: articleId } });

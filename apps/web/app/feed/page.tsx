@@ -157,6 +157,7 @@ function MorningGistsBanner({ cardHeight, onDismiss }: { cardHeight: number; onD
 
 export default function FeedPage() {
   const [user, setUser] = useState<User | null>(null);
+  const [accessToken, setAccessToken] = useState<string | undefined>();
   const [selectedTab, setSelectedTab] = useState<TabValue>(null);
   const [feedSort, setFeedSort] = useState<FeedSort>("ranked");
   const [articles, setArticles] = useState<Article[]>([]);
@@ -186,9 +187,13 @@ export default function FeedPage() {
 
   // Auth
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setUser(data.session?.user ?? null));
+    supabase.auth.getSession().then(({ data }) => {
+      setUser(data.session?.user ?? null);
+      setAccessToken(data.session?.access_token);
+    });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
       setUser(session?.user ?? null);
+      setAccessToken(session?.access_token);
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -519,6 +524,7 @@ export default function FeedPage() {
                   userId={user?.id ?? null}
                   email={user?.email ?? null}
                   username={user?.user_metadata?.username ?? null}
+                  accessToken={accessToken}
                   isBookmarked={bookmarkedIds.has((item as Article).id)}
                   onBookmarkToggle={(id, bookmarked) => {
                     setBookmarkedIds((prev) => {
@@ -577,6 +583,7 @@ export default function FeedPage() {
           userId={user.id}
           email={user.email ?? ""}
           username={user.user_metadata?.username ?? "user"}
+          accessToken={accessToken}
           onClose={() => setSubmitModalOpen(false)}
         />
       )}

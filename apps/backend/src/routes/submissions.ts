@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import { prisma } from "../db/client";
 import { Category } from "@prisma/client";
 import { summarizeArticle } from "../services/summarizer";
+import { adminAuth } from "../middleware/adminAuth";
 
 const router = Router();
 
@@ -15,8 +16,27 @@ router.post("/submit", async (req: Request, res: Response) => {
     return;
   }
 
+  // Verify that the authenticated user matches the submitted userId
+  const verifiedId = req.headers["x-verified-user-id"] as string | undefined;
+  if (verifiedId && verifiedId !== userId) {
+    res.status(403).json({ error: "User ID mismatch" });
+    return;
+  }
+
   if (!VALID_CATEGORIES.has(category)) {
     res.status(400).json({ error: "Invalid category" });
+    return;
+  }
+
+  // Validate URL format
+  try {
+    const parsed = new URL(url as string);
+    if (!["http:", "https:"].includes(parsed.protocol)) {
+      res.status(400).json({ error: "URL must use http or https" });
+      return;
+    }
+  } catch {
+    res.status(400).json({ error: "Invalid URL" });
     return;
   }
 
@@ -80,7 +100,8 @@ router.get("/submissions", async (req: Request, res: Response) => {
   res.json({ items: submissions });
 });
 
-router.post("/submissions/:id/approve", async (req: Request, res: Response) => {
+// Approval is an admin action — require ADMIN_SECRET header
+router.post("/submissions/:id/approve", adminAuth, async (req: Request, res: Response) => {
   const id = String(req.params.id);
 
   const submission = await prisma.userSubmission.findUnique({ where: { id } });

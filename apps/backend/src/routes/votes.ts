@@ -23,6 +23,11 @@ router.post("/:id/vote", async (req: Request, res: Response) => {
     }
 
     const { userId, email, username, value } = parsed.data;
+    const verifiedId = req.headers["x-verified-user-id"] as string | undefined;
+    if (verifiedId && verifiedId !== userId) {
+      res.status(403).json({ error: "User ID mismatch" });
+      return;
+    }
     const articleId = req.params.id as string;
 
     await upsertUser(userId, email, username);

@@ -27,6 +27,7 @@ export default function OnboardingCategoriesPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
   const [username, setUsername] = useState<string | null>(null);
+  const [accessToken, setAccessToken] = useState<string | undefined>();
 
   // Run once on mount — don't include router in deps to avoid re-run during navigation
   useEffect(() => {
@@ -39,6 +40,7 @@ export default function OnboardingCategoriesPage() {
       setUserId(u.id);
       setEmail(u.email ?? null);
       setUsername(u.user_metadata?.username ?? null);
+      setAccessToken(data.session.access_token);
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -58,11 +60,13 @@ export default function OnboardingCategoriesPage() {
     let uid = userId;
     let userEmail = email;
     let userUsername = username;
+    let token = accessToken;
     if (!uid || !userEmail) {
       const { data } = await supabase.auth.getSession();
       uid = data.session?.user.id ?? null;
       userEmail = data.session?.user.email ?? null;
       userUsername = data.session?.user.user_metadata?.username ?? null;
+      token = data.session?.access_token;
     }
 
     if (!uid || !userEmail) {
@@ -77,7 +81,8 @@ export default function OnboardingCategoriesPage() {
       await api.savePreferences(
         uid, userEmail, effectiveUsername,
         Array.from(selected),
-        []
+        [],
+        token
       );
       // Fire-and-forget — don't let this block navigation
       supabase.auth.updateUser({ data: { onboardingComplete: true } }).catch(console.error);

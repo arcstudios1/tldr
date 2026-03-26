@@ -37,6 +37,7 @@ interface Props {
   userId: string | null;
   email: string | null;
   username: string | null;
+  accessToken?: string;
   isBookmarked?: boolean;
   onBookmarkToggle?: (articleId: string, bookmarked: boolean) => void;
   cardHeight: number;
@@ -88,7 +89,7 @@ export function GistSkeleton({ cardHeight }: { cardHeight: number }) {
   );
 }
 
-export function Gist({ article, userId, email, username, isBookmarked = false, onBookmarkToggle, cardHeight, isActive = false, isRead = false }: Props) {
+export function Gist({ article, userId, email, username, accessToken, isBookmarked = false, onBookmarkToggle, cardHeight, isActive = false, isRead = false }: Props) {
   const [localVote, setLocalVote] = useState<1 | -1 | 0>((article.userVote as 1 | -1 | 0) ?? 0);
   const [upvotes, setUpvotes] = useState(article.upvotes);
   const [downvotes, setDownvotes] = useState(article.downvotes);
@@ -113,6 +114,7 @@ export function Gist({ article, userId, email, username, isBookmarked = false, o
   const [copied, setCopied] = useState(false);
   const [votePulse, setVotePulse] = useState<"up" | "down" | null>(null);
   const [bookmarkPop, setBookmarkPop] = useState(false);
+  const [storyLoading, setStoryLoading] = useState(false);
 
   const cardRef = useRef<HTMLDivElement>(null);
   const composeRef = useRef<HTMLInputElement>(null);
@@ -204,7 +206,7 @@ export function Gist({ article, userId, email, username, isBookmarked = false, o
     setVotePulse(value === 1 ? "up" : "down");
     setTimeout(() => setVotePulse(null), 300);
     try {
-      const result = await api.vote(article.id, userId, email!, effectiveUsername, next);
+      const result = await api.vote(article.id, userId, email!, effectiveUsername, next, accessToken);
       setUpvotes(result.upvotes);
       setDownvotes(result.downvotes);
     } catch (err) {
@@ -224,8 +226,8 @@ export function Gist({ article, userId, email, username, isBookmarked = false, o
     onBookmarkToggle?.(article.id, next);
     if (next) { setBookmarkPop(true); setTimeout(() => setBookmarkPop(false), 350); }
     try {
-      if (next) await api.addBookmark(article.id, userId, email ?? "", username ?? "user");
-      else await api.removeBookmark(article.id, userId);
+      if (next) await api.addBookmark(article.id, userId, email ?? "", username ?? "user", accessToken);
+      else await api.removeBookmark(article.id, userId, accessToken);
     } catch {
       setLocalBookmark(!next);
       onBookmarkToggle?.(article.id, !next);
@@ -273,8 +275,6 @@ export function Gist({ article, userId, email, username, isBookmarked = false, o
     setShareMenuOpen(false);
   }
 
-  const [storyLoading, setStoryLoading] = useState(false);
-
   async function handleDownloadStory() {
     setStoryLoading(true);
     setShareMenuOpen(false);
@@ -300,7 +300,7 @@ export function Gist({ article, userId, email, username, isBookmarked = false, o
     setPosting(true);
     setPostError(false);
     try {
-      const comment = await api.postComment(article.id, userId, email!, effectiveUsername, commentBody.trim());
+      const comment = await api.postComment(article.id, userId, email!, effectiveUsername, commentBody.trim(), accessToken);
       setComments((prev) => [comment, ...prev]);
       setCommentBody("");
       setLocalCommentCount((c) => c + 1);

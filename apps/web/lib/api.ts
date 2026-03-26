@@ -72,10 +72,14 @@ export interface CommentsResponse {
   nextCursor: string | null;
 }
 
-async function request<T>(path: string, options?: RequestInit): Promise<T> {
+async function request<T>(path: string, options?: RequestInit, token?: string): Promise<T> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
   const res = await fetch(`${API_URL}${path}`, {
-    headers: { "Content-Type": "application/json" },
+    headers,
     ...options,
+    // options.headers override ours if present, so merge carefully
+    ...(options?.headers ? { headers: { ...headers, ...(options.headers as Record<string, string>) } } : {}),
   });
   if (!res.ok) {
     let detail = "";
@@ -147,12 +151,13 @@ export const api = {
     email: string,
     username: string,
     categories: Category[],
-    excludedSources: string[]
+    excludedSources: string[],
+    token?: string
   ): Promise<Preferences> =>
     request<Preferences>(`/users/${userId}/preferences`, {
       method: "PUT",
       body: JSON.stringify({ email, username, categories, excludedSources }),
-    }),
+    }, token),
 
   getFeed: (params: {
     category?: Category;
@@ -182,34 +187,35 @@ export const api = {
   getGist: (id: string): Promise<Article & { sources?: GistSource[] }> =>
     request<Article & { sources?: GistSource[] }>(`/feed/${id}`),
 
-  vote: (articleId: string, userId: string, email: string, username: string, value: 1 | -1 | 0) =>
+  vote: (articleId: string, userId: string, email: string, username: string, value: 1 | -1 | 0, token?: string) =>
     request<{ upvotes: number; downvotes: number; userVote: number }>(
       `/articles/${articleId}/vote`,
-      { method: "POST", body: JSON.stringify({ userId, email, username, value }) }
+      { method: "POST", body: JSON.stringify({ userId, email, username, value }) },
+      token
     ),
 
   getBookmarks: (userId: string): Promise<Article[]> =>
     request<Article[]>(`/users/${userId}/bookmarks`),
 
-  addBookmark: (articleId: string, userId: string, email: string, username: string) =>
+  addBookmark: (articleId: string, userId: string, email: string, username: string, token?: string) =>
     request<{ bookmarked: boolean }>(`/users/${userId}/bookmarks`, {
       method: "POST",
       body: JSON.stringify({ articleId, email, username }),
-    }),
+    }, token),
 
-  removeBookmark: (articleId: string, userId: string) =>
+  removeBookmark: (articleId: string, userId: string, token?: string) =>
     request<{ bookmarked: boolean }>(`/users/${userId}/bookmarks/${articleId}`, {
       method: "DELETE",
-    }),
+    }, token),
 
   getComments: (articleId: string): Promise<CommentsResponse> =>
     request<CommentsResponse>(`/articles/${articleId}/comments`),
 
-  postComment: (articleId: string, userId: string, email: string, username: string, body: string): Promise<Comment> =>
+  postComment: (articleId: string, userId: string, email: string, username: string, body: string, token?: string): Promise<Comment> =>
     request<Comment>(`/articles/${articleId}/comments`, {
       method: "POST",
       body: JSON.stringify({ userId, email, username, body }),
-    }),
+    }, token),
 
   getMarkets: (category?: Category): Promise<MarketsResponse> => {
     const path = category ? `/markets/${category}` : "/markets";
@@ -239,11 +245,11 @@ export const api = {
     url: string;
     category: Category;
     description?: string;
-  }) =>
+  }, token?: string) =>
     request<{ id: string; status: string; message?: string }>("/gists/submit", {
       method: "POST",
       body: JSON.stringify(params),
-    }),
+    }, token),
 
   getSubmissions: (userId?: string): Promise<{ items: UserSubmission[] }> => {
     const query = userId ? `?userId=${userId}` : "";

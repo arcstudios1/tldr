@@ -38,6 +38,7 @@ type Section = "topics" | "sources" | null;
 export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
+  const [accessToken, setAccessToken] = useState<string | undefined>();
   const [loading, setLoading] = useState(true);
   const [bookmarkCount, setBookmarkCount] = useState<number | null>(null);
 
@@ -53,6 +54,7 @@ export default function ProfilePage() {
       if (!data.session) { router.replace("/sign-in"); return; }
       const u = data.session.user;
       setUser(u);
+      setAccessToken(data.session.access_token);
       Promise.all([
         api.getBookmarks(u.id).catch(() => []),
         api.getPreferences(u.id).catch(() => null),
@@ -76,7 +78,8 @@ export default function ProfilePage() {
       await api.savePreferences(
         user.id, user.email!, effectiveUsername,
         Array.from(categories),
-        Array.from(excluded)
+        Array.from(excluded),
+        accessToken
       );
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 2500);

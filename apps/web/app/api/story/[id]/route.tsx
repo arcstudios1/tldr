@@ -56,24 +56,32 @@ export async function GET(
   const catColor = CATEGORY_COLORS[category] ?? "#60a5fa";
   const bullets = summary.split("\n").filter(Boolean);
 
+  const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
+  const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5 MB
+
   // Try to fetch the article image as a data URL so @vercel/og can render it.
   // Must use Web APIs only (no Buffer) since this runs on the Edge runtime.
   let imageDataUrl: string | null = null;
   if (imageUrl) {
     try {
-      const imgRes = await fetch(imageUrl);
+      const imgRes = await fetch(imageUrl, { signal: AbortSignal.timeout(4000) });
       if (imgRes.ok) {
-        const buf = await imgRes.arrayBuffer();
-        const mime = imgRes.headers.get("content-type") ?? "image/jpeg";
-        // Convert ArrayBuffer → base64 using only Web APIs (Edge-safe)
-        const bytes = new Uint8Array(buf);
-        let binary = "";
-        const chunkSize = 8192;
-        for (let i = 0; i < bytes.length; i += chunkSize) {
-          binary += String.fromCharCode(...bytes.slice(i, i + chunkSize));
+        const mime = imgRes.headers.get("content-type")?.split(";")[0].trim() ?? "image/jpeg";
+        const contentLength = Number(imgRes.headers.get("content-length") ?? 0);
+        if (ALLOWED_IMAGE_TYPES.has(mime) && (contentLength === 0 || contentLength <= MAX_IMAGE_BYTES)) {
+          const buf = await imgRes.arrayBuffer();
+          if (buf.byteLength <= MAX_IMAGE_BYTES) {
+            // Convert ArrayBuffer → base64 using only Web APIs (Edge-safe)
+            const bytes = new Uint8Array(buf);
+            let binary = "";
+            const chunkSize = 8192;
+            for (let i = 0; i < bytes.length; i += chunkSize) {
+              binary += String.fromCharCode(...bytes.slice(i, i + chunkSize));
+            }
+            const b64 = btoa(binary);
+            imageDataUrl = `data:${mime};base64,${b64}`;
+          }
         }
-        const b64 = btoa(binary);
-        imageDataUrl = `data:${mime};base64,${b64}`;
       }
     } catch {
       // no image — fall through to plain dark background
