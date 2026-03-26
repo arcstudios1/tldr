@@ -34,9 +34,7 @@ export async function GET(
   let imageUrl: string | null = null;
 
   try {
-    const res = await fetch(`${API_URL}/feed/${id}`, {
-      next: { revalidate: 600 },
-    });
+    const res = await fetch(`${API_URL}/feed/${id}`);
     if (res.ok) {
       const data = await res.json();
       title = data.title ?? title;
@@ -59,7 +57,7 @@ export async function GET(
   const bullets = summary.split("\n").filter(Boolean);
 
   // Try to fetch the article image as a data URL so @vercel/og can render it.
-  // If anything fails we just skip it and show the plain dark background.
+  // Must use Web APIs only (no Buffer) since this runs on the Edge runtime.
   let imageDataUrl: string | null = null;
   if (imageUrl) {
     try {
@@ -67,11 +65,18 @@ export async function GET(
       if (imgRes.ok) {
         const buf = await imgRes.arrayBuffer();
         const mime = imgRes.headers.get("content-type") ?? "image/jpeg";
-        const b64 = Buffer.from(buf).toString("base64");
+        // Convert ArrayBuffer → base64 using only Web APIs (Edge-safe)
+        const bytes = new Uint8Array(buf);
+        let binary = "";
+        const chunkSize = 8192;
+        for (let i = 0; i < bytes.length; i += chunkSize) {
+          binary += String.fromCharCode(...bytes.slice(i, i + chunkSize));
+        }
+        const b64 = btoa(binary);
         imageDataUrl = `data:${mime};base64,${b64}`;
       }
     } catch {
-      // no image — fall through
+      // no image — fall through to plain dark background
     }
   }
 
